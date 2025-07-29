@@ -9,6 +9,8 @@
 #include <QVBoxLayout>
 #include "userdata.h"
 #include "registerui.h"
+#include "questionUI.h"
+#include "registerAdminUI.h"
 
 class LoginUI : public QWidget
 {
@@ -30,6 +32,7 @@ private slots:
     void onLoginButtonClicked();
     void onSignUpClicked();
 
+
 private:
     QLabel *logoLabel;
     QLabel *titleLabel;
@@ -41,6 +44,8 @@ private:
     QLabel *signupLabel;
     QLabel *signupLink;
     RegisterUI *registerWindow = nullptr;
+    QuestionUI *questionWindow = nullptr;
+    RegisterAdminUI *registerAdminWindow = nullptr;
 
     UserData currentUser;
     int userType = 0;

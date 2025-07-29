@@ -140,19 +140,46 @@ void LoginUI::onLoginButtonClicked()
 
 void LoginUI::onSignUpClicked()
 {
-    // Evita abrir más de una ventana de registro
-    if (!registerWindow) {
-        registerWindow = new RegisterUI;
-        // Cuando el registro termina, vuelve a mostrar el login
-        connect(registerWindow, &RegisterUI::goToLogin, this, [this]() {
-            this->show();
-            registerWindow->deleteLater();
-            registerWindow = nullptr;
+    // Evita abrir más de una ventana de pregunta
+    if (!questionWindow) {
+        questionWindow = new QuestionUI;
+        // Si elige admin/artista
+        connect(questionWindow, &QuestionUI::adminSelected, this, [this]() {
+            if (!registerAdminWindow) {
+                registerAdminWindow = new RegisterAdminUI;
+                connect(registerAdminWindow, &RegisterAdminUI::goToLogin, this, [this]() {
+                    this->show();
+                    registerAdminWindow->deleteLater();
+                    registerAdminWindow = nullptr;
+                });
+            }
+            registerAdminWindow->show();
+            questionWindow->close();
+            questionWindow->deleteLater();
+            questionWindow = nullptr;
+            this->hide();
+        });
+        // Si elige usuario común
+        connect(questionWindow, &QuestionUI::userSelected, this, [this]() {
+            if (!registerWindow) {
+                registerWindow = new RegisterUI;
+                connect(registerWindow, &RegisterUI::goToLogin, this, [this]() {
+                    this->show();
+                    registerWindow->deleteLater();
+                    registerWindow = nullptr;
+                });
+            }
+            registerWindow->show();
+            questionWindow->close();
+            questionWindow->deleteLater();
+            questionWindow = nullptr;
+            this->hide();
         });
     }
-    registerWindow->show();
-    this->hide(); // ocultar login mientras está el registro
+    questionWindow->show();
+    this->hide();
 }
+
 
 UserData LoginUI::getCurrentUser() const { return currentUser; }
 int LoginUI::getUserType() const { return userType; }
