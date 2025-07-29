@@ -7,7 +7,7 @@ QuestionUI::QuestionUI(QWidget *parent)
 {
     setStyleSheet("background-color: #191414;");
 
-    titleLabel = new QLabel("¿Deseas que tu cuenta sea Admin/Artista o Usuario común?");
+    titleLabel = new QLabel("¿Cuenta admin o user?");
     titleLabel->setStyleSheet("color: white;");
     QFont titleFont = titleLabel->font();
     titleFont.setPointSize(18);

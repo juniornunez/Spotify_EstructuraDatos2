@@ -38,7 +38,7 @@ private:
     QLabel *realNameLabel;
     QLineEdit *realNameEdit;
     QLabel *countryLabel;
-    QLineEdit *countryEdit;
+    QComboBox *countryEdit;
     QLabel *genreLabel;
     QComboBox *genreCombo;
     QLabel *bioLabel;

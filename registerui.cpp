@@ -19,7 +19,7 @@ RegisterUI::RegisterUI(QWidget *parent)
     // Logo
     logoLabel = new QLabel;
     QPixmap logo("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/logo/logo.png");
-    logoLabel->setPixmap(logo.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    logoLabel->setPixmap(logo.scaled(42, 42, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     logoLabel->setAlignment(Qt::AlignCenter);
 
     // Título
