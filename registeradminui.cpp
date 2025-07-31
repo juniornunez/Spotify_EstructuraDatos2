@@ -220,7 +220,6 @@ void RegisterAdminUI::onCreateAdminClicked()
     QString artisticName = artisticNameEdit->text().trimmed();
     QString realName = realNameEdit->text().trimmed();
     QString country = countryEdit->currentText();
-    //QString accountType = typeCombo->currentText();
     QString genre = genreCombo->currentText();
     QString bio = bioEdit->toPlainText().trimmed();
     QString imagePath = imagePathEdit->text().trimmed();

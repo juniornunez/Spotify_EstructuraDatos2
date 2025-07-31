@@ -6,6 +6,7 @@ SOURCES += \
     admindata.cpp \
     main.cpp \
     loginUI.cpp \
+    mainwindowui.cpp \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
@@ -14,6 +15,7 @@ SOURCES += \
 HEADERS += \
     admindata.h \
     loginUI.h \
+    mainwindowui.h \
     questionui.h \
     registeradminui.h \
     registerui.h \

@@ -32,7 +32,6 @@ private slots:
     void onLoginButtonClicked();
     void onSignUpClicked();
 
-
 private:
     QLabel *logoLabel;
     QLabel *titleLabel;

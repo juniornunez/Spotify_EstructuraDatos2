@@ -2,19 +2,22 @@
 #include <QPixmap>
 #include <QFont>
 #include <QMessageBox>
+#include <QDir>
+#include <QFile>
+#include <QDataStream>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QSpacerItem>
-#include <QDesktopServices>
-#include <QUrl>
+#include "MainWindowUI.h"
 
 LoginUI::LoginUI(QWidget *parent)
     : QWidget(parent)
 {
-    // Fondo negro total
     setStyleSheet("background-color: #191414;");
 
     // Logo Spotify
     logoLabel = new QLabel;
-    QPixmap logo("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/logo/logo.png");
+    QPixmap logo("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/logo/logo.png"); // Usa recursos (ajusta la ruta si es necesario)
     logoLabel->setPixmap(logo.scaled(56, 56, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     logoLabel->setAlignment(Qt::AlignCenter);
 
@@ -32,12 +35,7 @@ LoginUI::LoginUI(QWidget *parent)
     usernameLabel->setStyleSheet("color: white; font-size: 12pt;");
     usernameEdit = new QLineEdit;
     usernameEdit->setStyleSheet(
-        "background-color: #121212;"
-        "color: white;"
-        "border: 1px solid #535353;"
-        "padding: 8px;"
-        "font-size: 12pt;"
-        "border-radius: 6px;"
+        "background-color: #121212; color: white; border: 1px solid #535353; padding: 8px; font-size: 12pt; border-radius: 6px;"
         );
 
     // Password
@@ -46,32 +44,15 @@ LoginUI::LoginUI(QWidget *parent)
     passwordEdit = new QLineEdit;
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setStyleSheet(
-        "background-color: #121212;"
-        "color: white;"
-        "border: 1px solid #535353;"
-        "padding: 8px;"
-        "font-size: 12pt;"
-        "border-radius: 6px;"
+        "background-color: #121212; color: white; border: 1px solid #535353; padding: 8px; font-size: 12pt; border-radius: 6px;"
         );
 
     // Botón verde Continue
     loginButton = new QPushButton("Continue");
     loginButton->setStyleSheet(
-        "QPushButton {"
-        "background-color: #1ED760;"
-        "color: black;"
-        "font-size: 14pt;"
-        "border: none;"
-        "padding: 10px;"
-        "border-radius: 24px;"
-        "font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "background-color: #1fdf64;"
-        "}"
+        "QPushButton { background-color: #1ED760; color: black; font-size: 14pt; border: none; padding: 10px; border-radius: 24px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #1fdf64; }"
         );
-
-    // Señales
     connect(loginButton, &QPushButton::clicked, this, &LoginUI::onLoginButtonClicked);
 
     // "Don't have an account?" + link
@@ -92,24 +73,19 @@ LoginUI::LoginUI(QWidget *parent)
 
     // Layout vertical principal
     QVBoxLayout *mainLayout = new QVBoxLayout;
-
     mainLayout->addStretch();
     mainLayout->addWidget(logoLabel, 0, Qt::AlignCenter);
     mainLayout->addSpacing(10);
     mainLayout->addWidget(titleLabel, 0, Qt::AlignCenter);
     mainLayout->addSpacing(30);
-
     mainLayout->addWidget(usernameLabel);
     mainLayout->addWidget(usernameEdit);
     mainLayout->addSpacing(12);
-
     mainLayout->addWidget(passwordLabel);
     mainLayout->addWidget(passwordEdit);
     mainLayout->addSpacing(24);
-
     mainLayout->addWidget(loginButton);
     mainLayout->addSpacing(20);
-
     mainLayout->addLayout(signupLayout);
     mainLayout->addSpacing(10);
     mainLayout->addStretch();
@@ -123,19 +99,78 @@ LoginUI::~LoginUI() {}
 
 void LoginUI::onLoginButtonClicked()
 {
-    QString username = usernameEdit->text();
+    QString username = usernameEdit->text().trimmed();
     QString password = passwordEdit->text();
 
-    UserData user;
-    if (user.authenticate(username.toStdString(), password.toStdString())) {
-        currentUser = user;
-        userType = user.getType();
-        QMessageBox::information(this, "Login exitoso", "Bienvenido, " + username);
-        emit loginSuccess(userType);
-        close();
-    } else {
-        QMessageBox::warning(this, "Error", "Credenciales incorrectas.");
+    if (username.isEmpty() || password.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Debes ingresar username y contraseña.");
+        return;
     }
+
+    bool isAdmin = false;
+    QString profilePicPath;
+    QString dataDir;
+
+    // 1. Buscar en userdata (usuarios normales)
+    dataDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/" + username;
+    if (QDir(dataDir).exists()) {
+        QFile binFile(dataDir + "/info.bin");
+        if (binFile.open(QIODevice::ReadOnly)) {
+            QDataStream in(&binFile);
+            in.setVersion(QDataStream::Qt_5_15);
+            QString uname, pass, imgPath;
+            int edad, type;
+            in >> uname >> pass >> edad >> imgPath >> type;
+            binFile.close();
+            if (uname == username && pass == password) {
+                profilePicPath = imgPath;
+                isAdmin = false;
+            } else {
+                QMessageBox::warning(this, "Error", "Credenciales incorrectas.");
+                return;
+            }
+        } else {
+            QMessageBox::warning(this, "Error", "No se pudo abrir el archivo de usuario.");
+            return;
+        }
+    }
+    // 2. Buscar en admindata (admins/artistas)
+    else {
+        dataDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/" + username;
+        if (QDir(dataDir).exists()) {
+            QFile binFile(dataDir + "/info.bin");
+            if (binFile.open(QIODevice::ReadOnly)) {
+                QDataStream in(&binFile);
+                in.setVersion(QDataStream::Qt_5_15);
+                int uniqueId;
+                QString uname, pass, artisticName, realName, country, genre, bio, fecha, imgPath;
+                bool activo;
+                in >> uniqueId >> uname >> pass >> artisticName >> realName >> country >> genre >> bio >> fecha >> imgPath >> activo;
+                binFile.close();
+                if (uname == username && pass == password && activo) {
+                    profilePicPath = imgPath;
+                    isAdmin = true;
+                } else {
+                    QMessageBox::warning(this, "Error", "Credenciales incorrectas o usuario desactivado.");
+                    return;
+                }
+            } else {
+                QMessageBox::warning(this, "Error", "No se pudo abrir el archivo de admin.");
+                return;
+            }
+        } else {
+            QMessageBox::warning(this, "Error", "Usuario no encontrado.");
+            return;
+        }
+    }
+
+    // Login exitoso
+    QMessageBox::information(this, "Login exitoso", "Bienvenido, " + username);
+
+    // Abre el menú principal y pasa el tipo de usuario
+    MainWindowUI *mainMenu = new MainWindowUI(profilePicPath, isAdmin);
+    mainMenu->show();
+    close();
 }
 
 void LoginUI::onSignUpClicked()
@@ -179,7 +214,6 @@ void LoginUI::onSignUpClicked()
     questionWindow->show();
     this->hide();
 }
-
 
 UserData LoginUI::getCurrentUser() const { return currentUser; }
 int LoginUI::getUserType() const { return userType; }
