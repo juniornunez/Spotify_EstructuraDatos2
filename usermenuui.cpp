@@ -121,11 +121,27 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     // Añadir barra superior al panel principal
     mainPanelLayout->addLayout(topBarLayout);
 
-    // Relleno principal (aquí puedes agregar widgets, carátulas, etc.)
-    QLabel *emptyHint = new QLabel("<i>No hay playlists aún</i>");
-    emptyHint->setStyleSheet("color: #888; font-size: 13pt;");
-    mainPanelLayout->addSpacing(48);
-    mainPanelLayout->addWidget(emptyHint, 0, Qt::AlignCenter);
+    // ------------ NUEVO CONTENIDO PRINCIPAL ----------------
+    // "My top songs"
+    QLabel *topSongsLabel = new QLabel("My top songs");
+    QFont topSongsFont = topSongsLabel->font();
+    topSongsFont.setPointSize(22);
+    topSongsFont.setBold(true);
+    topSongsLabel->setFont(topSongsFont);
+    topSongsLabel->setStyleSheet("color: white;");
+    mainPanelLayout->addSpacing(35);
+    mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
+
+    // "Top artists"
+    QLabel *topArtistsLabel = new QLabel("Top artists");
+    QFont topArtistsFont = topArtistsLabel->font();
+    topArtistsFont.setPointSize(22);
+    topArtistsFont.setBold(true);
+    topArtistsLabel->setFont(topArtistsFont);
+    topArtistsLabel->setStyleSheet("color: white; margin-top:20px;");
+    mainPanelLayout->addSpacing(170);
+    mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
+
     mainPanelLayout->addStretch();
 
     // ---- LAYOUT PRINCIPAL ----

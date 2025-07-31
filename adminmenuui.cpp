@@ -8,8 +8,7 @@
 #include <QPainterPath>
 #include <QPushButton>
 #include "artistsettingsui.h"
-#include<adminprofileui.h>
-#include <admindata.h>
+#include <qpainter.h>
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     : QWidget(parent)
@@ -68,6 +67,8 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
 
     connect(artistSettingsButton, &QPushButton::clicked, this, &AdminMenuUI::onArtistSettingsClicked);
 
+
+
     // -------- PANEL DERECHO (main panel) --------
     QWidget *mainPanelWidget = new QWidget;
     mainPanelWidget->setStyleSheet("background: transparent;");
@@ -86,7 +87,6 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     homeIconLabel->setFixedSize(44, 44);
     homeIconLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
     topBarLayout->addWidget(homeIconLabel, 0, Qt::AlignLeft);
-
 
     // Barra de búsqueda
     searchBar = new QLineEdit;
@@ -139,11 +139,27 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     // Añadir barra superior al panel principal
     mainPanelLayout->addLayout(topBarLayout);
 
-    // Relleno principal (aquí puedes agregar widgets, carátulas, etc.)
-    QLabel *emptyHint = new QLabel("<i>No hay playlists aún</i>");
-    emptyHint->setStyleSheet("color: #888; font-size: 13pt;");
-    mainPanelLayout->addSpacing(48);
-    mainPanelLayout->addWidget(emptyHint, 0, Qt::AlignCenter);
+    // ------------ NUEVO CONTENIDO PRINCIPAL ----------------
+    // "My top songs"
+    QLabel *topSongsLabel = new QLabel("My top songs");
+    QFont topSongsFont = topSongsLabel->font();
+    topSongsFont.setPointSize(22);
+    topSongsFont.setBold(true);
+    topSongsLabel->setFont(topSongsFont);
+    topSongsLabel->setStyleSheet("color: white;");
+    mainPanelLayout->addSpacing(35);
+    mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
+
+    // "Top artists"
+    QLabel *topArtistsLabel = new QLabel("Top artists");
+    QFont topArtistsFont = topArtistsLabel->font();
+    topArtistsFont.setPointSize(22);
+    topArtistsFont.setBold(true);
+    topArtistsLabel->setFont(topArtistsFont);
+    topArtistsLabel->setStyleSheet("color: white; margin-top:20px;");
+    mainPanelLayout->addSpacing(170);
+    mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
+
     mainPanelLayout->addStretch();
 
     // ---- LAYOUT PRINCIPAL ----
@@ -179,17 +195,8 @@ void AdminMenuUI::onArtistSettingsClicked()
 
 void AdminMenuUI::onProfilePicClicked()
 {
-    // Crea y muestra la ventana de perfil de admin, pasando los datos necesarios
-    AdminProfileUI *profileWin = new AdminProfileUI(
-        adminData.getProfileImagePath(),
-        adminData.getArtisticName(),
-        adminData.getRealName(),
-        adminData.getUsername(),
-        adminData.getCountry(),
-        adminData.getGenre(),
-        adminData.getBio(),
-        this // Opcional, para ownership
-        );
-    profileWin->setAttribute(Qt::WA_DeleteOnClose); // Para liberar memoria al cerrar
-    profileWin->show();
+    // Aquí podrías abrir una ventana de perfil, opciones, o lo que prefieras.
+    // Por ejemplo: ProfileOptionsUI *options = new ProfileOptionsUI(); options->show();
+    // QMessageBox::information(this, "Perfil", "Aquí irán opciones del perfil.");
 }
+
