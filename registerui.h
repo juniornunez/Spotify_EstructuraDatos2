@@ -5,9 +5,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QComboBox>
 #include <QFileDialog>
-#include "userdata.h"
 
 class RegisterUI : public QWidget
 {
@@ -38,8 +36,6 @@ private:
     QLabel *imageLabel;
     QLineEdit *imagePathEdit;
     QPushButton *selectImageButton;
-    QLabel *typeLabel;
-    QComboBox *typeCombo;
     QPushButton *createAccountButton;
     QLabel *loginLabel;
     QLabel *loginLink;

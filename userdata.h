@@ -15,6 +15,9 @@ public:
     bool isActive() const;
     bool loadByUsername(const std::string& username);
 
+    // Nuevos: para guardar usuario
+    bool saveToFile(const std::string& filename = "usuarios.dat") const;
+
 private:
     int id;
     std::string username;

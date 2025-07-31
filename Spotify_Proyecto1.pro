@@ -4,22 +4,28 @@ CONFIG += c++17
 
 SOURCES += \
     admindata.cpp \
+    adminmenuui.cpp \
+    adminprofileui.cpp \
+    artistsettingsui.cpp \
     main.cpp \
     loginUI.cpp \
-    mainwindowui.cpp \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
-    userdata.cpp
+    userdata.cpp \
+    usermenuui.cpp
 
 HEADERS += \
     admindata.h \
+    adminmenuui.h \
+    adminprofileui.h \
+    artistsettingsui.h \
     loginUI.h \
-    mainwindowui.h \
     questionui.h \
     registeradminui.h \
     registerui.h \
-    userdata.h
+    userdata.h \
+    usermenuui.h
 
 FORMS += \
 

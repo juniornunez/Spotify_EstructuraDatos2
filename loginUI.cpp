@@ -8,7 +8,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSpacerItem>
-#include "MainWindowUI.h"
+#include <adminmenuui.h>
+#include <usermenuui.h>
 
 LoginUI::LoginUI(QWidget *parent)
     : QWidget(parent)
@@ -17,7 +18,7 @@ LoginUI::LoginUI(QWidget *parent)
 
     // Logo Spotify
     logoLabel = new QLabel;
-    QPixmap logo("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/logo/logo.png"); // Usa recursos (ajusta la ruta si es necesario)
+    QPixmap logo("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/logo/logo.png");
     logoLabel->setPixmap(logo.scaled(56, 56, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     logoLabel->setAlignment(Qt::AlignCenter);
 
@@ -97,6 +98,17 @@ LoginUI::LoginUI(QWidget *parent)
 
 LoginUI::~LoginUI() {}
 
+QString LoginUI::findProfileImage(const QString& userFolder) {
+    QDir dir(userFolder);
+    QStringList filters;
+    filters << "profile.jpg" << "profile.jpeg" << "profile.png" << "profile.bmp";
+    QStringList found = dir.entryList(filters, QDir::Files);
+    if (!found.isEmpty()) {
+        return dir.absoluteFilePath(found.first());
+    }
+    return ""; // No image found
+}
+
 void LoginUI::onLoginButtonClicked()
 {
     QString username = usernameEdit->text().trimmed();
@@ -114,16 +126,16 @@ void LoginUI::onLoginButtonClicked()
     // 1. Buscar en userdata (usuarios normales)
     dataDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/" + username;
     if (QDir(dataDir).exists()) {
-        QFile binFile(dataDir + "/info.bin");
-        if (binFile.open(QIODevice::ReadOnly)) {
-            QDataStream in(&binFile);
+        QFile datFile(dataDir + "/info.dat");
+        if (datFile.open(QIODevice::ReadOnly)) {
+            QDataStream in(&datFile);
             in.setVersion(QDataStream::Qt_5_15);
-            QString uname, pass, imgPath;
-            int edad, type;
-            in >> uname >> pass >> edad >> imgPath >> type;
-            binFile.close();
+            QString uname, pass;
+            int edad;
+            in >> uname >> pass >> edad;
+            datFile.close();
             if (uname == username && pass == password) {
-                profilePicPath = imgPath;
+                profilePicPath = findProfileImage(dataDir);
                 isAdmin = false;
             } else {
                 QMessageBox::warning(this, "Error", "Credenciales incorrectas.");
@@ -138,17 +150,17 @@ void LoginUI::onLoginButtonClicked()
     else {
         dataDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/" + username;
         if (QDir(dataDir).exists()) {
-            QFile binFile(dataDir + "/info.bin");
-            if (binFile.open(QIODevice::ReadOnly)) {
-                QDataStream in(&binFile);
+            QFile datFile(dataDir + "/info.dat");
+            if (datFile.open(QIODevice::ReadOnly)) {
+                QDataStream in(&datFile);
                 in.setVersion(QDataStream::Qt_5_15);
                 int uniqueId;
-                QString uname, pass, artisticName, realName, country, genre, bio, fecha, imgPath;
+                QString uname, pass, artisticName, realName, country, genre, bio, fecha;
                 bool activo;
-                in >> uniqueId >> uname >> pass >> artisticName >> realName >> country >> genre >> bio >> fecha >> imgPath >> activo;
-                binFile.close();
+                in >> uniqueId >> uname >> pass >> artisticName >> realName >> country >> genre >> bio >> fecha >> activo;
+                datFile.close();
                 if (uname == username && pass == password && activo) {
-                    profilePicPath = imgPath;
+                    profilePicPath = findProfileImage(dataDir);
                     isAdmin = true;
                 } else {
                     QMessageBox::warning(this, "Error", "Credenciales incorrectas o usuario desactivado.");
@@ -168,9 +180,12 @@ void LoginUI::onLoginButtonClicked()
     QMessageBox::information(this, "Login exitoso", "Bienvenido, " + username);
 
     // Abre el menú principal y pasa el tipo de usuario
-    MainWindowUI *mainMenu = new MainWindowUI(profilePicPath, isAdmin);
-    mainMenu->show();
-    close();
+    if (isAdmin)
+        (new AdminMenuUI(profilePicPath))->show();
+    else
+        (new UserMenuUI(profilePicPath))->show();
+
+    this->close();
 }
 
 void LoginUI::onSignUpClicked()

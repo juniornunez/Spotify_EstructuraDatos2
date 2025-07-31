@@ -48,6 +48,8 @@ private:
 
     UserData currentUser;
     int userType = 0;
+
+    QString findProfileImage(const QString& userFolder);
 };
 
 #endif // LOGINUI_H

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <QFileDialog>
+#include "adminmenuui.h"
 
 RegisterAdminUI::RegisterAdminUI(QWidget *parent)
     : QWidget(parent)
@@ -63,31 +64,31 @@ RegisterAdminUI::RegisterAdminUI(QWidget *parent)
     countryLabel->setStyleSheet("color: white; font-size: 12pt;");
     countryEdit = new QComboBox;
     countryEdit -> addItems(
-    {
-        "Afganistán", "Albania", "Alemania", "Andorra", "Angola", "Antigua y Barbuda", "Arabia Saudita", "Argelia", "Argentina",
-        "Armenia", "Australia", "Austria", "Azerbaiyán", "Bahamas", "Bangladés", "Baréin", "Barbados", "Bélgica",
-        "Belice", "Benín", "Bielorrusia", "Birmania", "Bolivia", "Bosnia y Herzegovina", "Botsuana", "Brasil",
-        "Brunéi", "Bulgaria", "Burkina Faso", "Burundi", "Bután", "Cabo Verde", "Camboya", "Camerún", "Canadá",
-        "Catar", "Chad", "Chile", "China", "Chipre", "Ciudad del Vaticano", "Colombia", "Comoras", "Corea del Norte",
-        "Corea del Sur", "Costa de Marfil", "Costa Rica", "Croacia", "Cuba", "Dinamarca", "Dominica", "Ecuador",
-        "Egipto", "El Salvador", "Emiratos Árabes Unidos", "Eritrea", "Eslovaquia", "Eslovenia", "España", "Estados Unidos",
-        "Estonia", "Etiopía", "Filipinas", "Finlandia", "Fiyi", "Francia", "Gabón", "Gambia", "Georgia", "Ghana",
-        "Granada", "Grecia", "Guatemala", "Guyana", "Guinea", "Guinea-Bisáu", "Guinea Ecuatorial", "Haití", "Honduras",
-        "Hungría", "India", "Indonesia", "Irak", "Irán", "Irlanda", "Islandia", "Islas Marshall", "Islas Salomón",
-        "Israel", "Italia", "Jamaica", "Japón", "Jordania", "Kazajistán", "Kenia", "Kirguistán", "Kiribati", "Kuwait",
-        "Laos", "Lesoto", "Letonia", "Líbano", "Liberia", "Libia", "Liechtenstein", "Lituania", "Luxemburgo", "Macedonia del Norte",
-        "Madagascar", "Malasia", "Malaui", "Maldivas", "Malí", "Malta", "Marruecos", "Mauricio", "Mauritania", "México",
-        "Micronesia", "Moldavia", "Mónaco", "Mongolia", "Montenegro", "Mozambique", "Namibia", "Nauru", "Nepal",
-        "Nicaragua", "Níger", "Nigeria", "Noruega", "Nueva Zelanda", "Omán", "Países Bajos", "Pakistán", "Palaos",
-        "Panamá", "Papúa Nueva Guinea", "Paraguay", "Perú", "Polonia", "Portugal", "Reino Unido", "República Centroafricana",
-        "República Checa", "República del Congo", "República Democrática del Congo", "República Dominicana", "Ruanda",
-        "Rumanía", "Rusia", "Samoa", "San Cristóbal y Nieves", "San Marino", "San Vicente y las Granadinas", "Santa Lucía",
-        "Santo Tomé y Príncipe", "Senegal", "Serbia", "Seychelles", "Sierra Leona", "Singapur", "Siria", "Somalia",
-        "Sri Lanka", "Suazilandia", "Sudáfrica", "Sudán", "Sudán del Sur", "Suecia", "Suiza", "Surinam", "Tailandia",
-        "Tanzania", "Tayikistán", "Timor Oriental", "Togo", "Tonga", "Trinidad y Tobago", "Túnez", "Turkmenistán", "Turquía",
-        "Tuvalu", "Ucrania", "Uganda", "Uruguay", "Uzbekistán", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Yibuti",
-        "Zambia", "Zimbabue"
-    });
+        {
+            "Afganistán", "Albania", "Alemania", "Andorra", "Angola", "Antigua y Barbuda", "Arabia Saudita", "Argelia", "Argentina",
+            "Armenia", "Australia", "Austria", "Azerbaiyán", "Bahamas", "Bangladés", "Baréin", "Barbados", "Bélgica",
+            "Belice", "Benín", "Bielorrusia", "Birmania", "Bolivia", "Bosnia y Herzegovina", "Botsuana", "Brasil",
+            "Brunéi", "Bulgaria", "Burkina Faso", "Burundi", "Bután", "Cabo Verde", "Camboya", "Camerún", "Canadá",
+            "Catar", "Chad", "Chile", "China", "Chipre", "Ciudad del Vaticano", "Colombia", "Comoras", "Corea del Norte",
+            "Corea del Sur", "Costa de Marfil", "Costa Rica", "Croacia", "Cuba", "Dinamarca", "Dominica", "Ecuador",
+            "Egipto", "El Salvador", "Emiratos Árabes Unidos", "Eritrea", "Eslovaquia", "Eslovenia", "España", "Estados Unidos",
+            "Estonia", "Etiopía", "Filipinas", "Finlandia", "Fiyi", "Francia", "Gabón", "Gambia", "Georgia", "Ghana",
+            "Granada", "Grecia", "Guatemala", "Guyana", "Guinea", "Guinea-Bisáu", "Guinea Ecuatorial", "Haití", "Honduras",
+            "Hungría", "India", "Indonesia", "Irak", "Irán", "Irlanda", "Islandia", "Islas Marshall", "Islas Salomón",
+            "Israel", "Italia", "Jamaica", "Japón", "Jordania", "Kazajistán", "Kenia", "Kirguistán", "Kiribati", "Kuwait",
+            "Laos", "Lesoto", "Letonia", "Líbano", "Liberia", "Libia", "Liechtenstein", "Lituania", "Luxemburgo", "Macedonia del Norte",
+            "Madagascar", "Malasia", "Malaui", "Maldivas", "Malí", "Malta", "Marruecos", "Mauricio", "Mauritania", "México",
+            "Micronesia", "Moldavia", "Mónaco", "Mongolia", "Montenegro", "Mozambique", "Namibia", "Nauru", "Nepal",
+            "Nicaragua", "Níger", "Nigeria", "Noruega", "Nueva Zelanda", "Omán", "Países Bajos", "Pakistán", "Palaos",
+            "Panamá", "Papúa Nueva Guinea", "Paraguay", "Perú", "Polonia", "Portugal", "Reino Unido", "República Centroafricana",
+            "República Checa", "República del Congo", "República Democrática del Congo", "República Dominicana", "Ruanda",
+            "Rumanía", "Rusia", "Samoa", "San Cristóbal y Nieves", "San Marino", "San Vicente y las Granadinas", "Santa Lucía",
+            "Santo Tomé y Príncipe", "Senegal", "Serbia", "Seychelles", "Sierra Leona", "Singapur", "Siria", "Somalia",
+            "Sri Lanka", "Suazilandia", "Sudáfrica", "Sudán", "Sudán del Sur", "Suecia", "Suiza", "Surinam", "Tailandia",
+            "Tanzania", "Tayikistán", "Timor Oriental", "Togo", "Tonga", "Trinidad y Tobago", "Túnez", "Turkmenistán", "Turquía",
+            "Tuvalu", "Ucrania", "Uganda", "Uruguay", "Uzbekistán", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Yibuti",
+            "Zambia", "Zimbabue"
+        });
 
     countryEdit->setStyleSheet("background-color: #121212; color: white; border: 1px solid #535353; padding: 8px; font-size: 12pt; border-radius: 6px;");
 
@@ -207,10 +208,12 @@ void RegisterAdminUI::onSelectImageClicked()
     }
 }
 
-bool RegisterAdminUI::usernameExists(const QString &username)
-{
-    QDir baseDir(adminsBasePath);
-    return baseDir.exists(username);
+bool usernameExistsGlobal(const QString &username) {
+    QString usersBasePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata";
+    QString adminsBasePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata";
+    QDir userDir(usersBasePath + "/" + username);
+    QDir adminDir(adminsBasePath + "/" + username);
+    return userDir.exists() || adminDir.exists();
 }
 
 void RegisterAdminUI::onCreateAdminClicked()
@@ -229,7 +232,7 @@ void RegisterAdminUI::onCreateAdminClicked()
         QMessageBox::warning(this, "Error", "All fields are required.");
         return;
     }
-    if (usernameExists(username)) {
+    if (usernameExistsGlobal(username)) {
         QMessageBox::warning(this, "Error", "Username already exists. Choose another.");
         return;
     }
@@ -245,14 +248,14 @@ void RegisterAdminUI::onCreateAdminClicked()
         return;
     }
 
-    // Guardar datos binarios de admin
-    QString binPath = adminsBasePath + "/" + username + "/info.bin";
-    QFile binFile(binPath);
-    if (!binFile.open(QIODevice::WriteOnly)) {
+    // Guardar datos en .dat (NO guardar ruta de imagen)
+    QString datPath = adminsBasePath + "/" + username + "/info.dat";
+    QFile datFile(datPath);
+    if (!datFile.open(QIODevice::WriteOnly)) {
         QMessageBox::warning(this, "Error", "Couldn't create admin data.");
         return;
     }
-    QDataStream out(&binFile);
+    QDataStream out(&datFile);
     out.setVersion(QDataStream::Qt_5_15);
 
     // ID automático usando std::rand
@@ -260,13 +263,21 @@ void RegisterAdminUI::onCreateAdminClicked()
     int uniqueId = std::rand();
     QString fecha = QDateTime::currentDateTime().toString(Qt::ISODate);
 
-    out << uniqueId << username << password << artisticName << realName << country << genre << bio << fecha << imageDest << true; // activo=true
-    binFile.close();
+    // Guardar solo los datos de texto, NO el path de imagen
+    out << uniqueId << username << password << artisticName << realName
+        << country << genre << bio << fecha << true; // activo=true
+
+    datFile.close();
 
     QMessageBox::information(this, "Success", "Admin/Artist account created successfully!");
-    emit adminAccountCreated();
-    close();
+
+    // --- ABRIR MENU DE ADMIN DIRECTAMENTE ---
+    QString profilePicPath = adminsBasePath + "/" + username + "/profile" + imgInfo.suffix().prepend(".");
+    AdminMenuUI *adminMenu = new AdminMenuUI(profilePicPath);
+    adminMenu->show();
+    this->close();
 }
+
 
 void RegisterAdminUI::onGoToLoginClicked()
 {

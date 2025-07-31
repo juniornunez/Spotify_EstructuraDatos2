@@ -8,7 +8,7 @@
 #include <QFileInfo>
 #include <QIntValidator>
 #include <QDebug>
-
+#include <usermenuui.h>
 RegisterUI::RegisterUI(QWidget *parent)
     : QWidget(parent)
 {
@@ -64,14 +64,6 @@ RegisterUI::RegisterUI(QWidget *parent)
         );
     connect(selectImageButton, &QPushButton::clicked, this, &RegisterUI::onSelectImageClicked);
 
-    // Tipo de usuario
-    typeLabel = new QLabel("Account type:");
-    typeLabel->setStyleSheet("color: white; font-size: 12pt;");
-    typeCombo = new QComboBox;
-    typeCombo->addItem("User");
-    typeCombo->addItem("Admin");
-    typeCombo->setStyleSheet("background-color: #222; color: white; border: 1px solid #535353; padding: 6px; font-size: 12pt; border-radius: 6px;");
-
     // Botón de crear cuenta
     createAccountButton = new QPushButton("Create account");
     createAccountButton->setStyleSheet(
@@ -121,10 +113,6 @@ RegisterUI::RegisterUI(QWidget *parent)
 
     mainLayout->addWidget(imageLabel);
     mainLayout->addLayout(imageLayout);
-    mainLayout->addSpacing(7);
-
-    mainLayout->addWidget(typeLabel);
-    mainLayout->addWidget(typeCombo);
     mainLayout->addSpacing(17);
 
     mainLayout->addWidget(createAccountButton);
@@ -150,10 +138,12 @@ void RegisterUI::onSelectImageClicked()
     }
 }
 
-bool RegisterUI::usernameExists(const QString &username)
-{
-    QDir baseDir(usersBasePath);
-    return baseDir.exists(username);
+bool UsernameExistsGlobal(const QString &username) {
+    QString usersBasePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata";
+    QString adminsBasePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata";
+    QDir usersDir(usersBasePath);
+    QDir adminsDir(adminsBasePath);
+    return usersDir.exists(username) || adminsDir.exists(username);
 }
 
 void RegisterUI::onCreateAccountClicked()
@@ -162,7 +152,6 @@ void RegisterUI::onCreateAccountClicked()
     QString password = passwordEdit->text();
     QString ageStr = ageEdit->text().trimmed();
     QString imagePath = imagePathEdit->text().trimmed();
-    QString accountType = typeCombo->currentText();
 
     // Validaciones
     if (username.isEmpty() || password.isEmpty() || ageStr.isEmpty() || imagePath.isEmpty()) {
@@ -175,7 +164,7 @@ void RegisterUI::onCreateAccountClicked()
         QMessageBox::warning(this, "Error", "Age must be a positive number.");
         return;
     }
-    if (usernameExists(username)) {
+    if (UsernameExistsGlobal(username)) {
         QMessageBox::warning(this, "Error", "Username already exists. Choose another.");
         return;
     }
@@ -191,22 +180,27 @@ void RegisterUI::onCreateAccountClicked()
         return;
     }
 
-    // Guardar datos binarios
-    QString binPath = usersBasePath + "/" + username + "/info.bin";
-    QFile binFile(binPath);
-    if (!binFile.open(QIODevice::WriteOnly)) {
+    // Guardar datos binarios en .dat, sin el path de la imagen y siempre tipo user (2)
+    QString datPath = usersBasePath + "/" + username + "/info.dat";
+    QFile datFile(datPath);
+    if (!datFile.open(QIODevice::WriteOnly)) {
         QMessageBox::warning(this, "Error", "Couldn't create user data.");
         return;
     }
-    QDataStream out(&binFile);
+    QDataStream out(&datFile);
     out.setVersion(QDataStream::Qt_5_15);
-    out << username << password << age << imageDest << (accountType == "Admin" ? 1 : 2);
-    binFile.close();
+    out << username << password << age << 2;
+    datFile.close();
 
     QMessageBox::information(this, "Success", "Account created successfully!");
-    emit accountCreated();
-    close();
+
+    // --- ABRIR MENU DE USUARIO DIRECTAMENTE ---
+    QString profilePicPath = usersBasePath + "/" + username + "/profile" + imgInfo.suffix().prepend(".");
+    UserMenuUI *userMenu = new UserMenuUI(profilePicPath);
+    userMenu->show();
+    this->close();
 }
+
 
 void RegisterUI::onGoToLoginClicked()
 {

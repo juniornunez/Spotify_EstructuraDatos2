@@ -7,7 +7,6 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QComboBox>
-#include "admindata.h"
 
 class RegisterAdminUI : public QWidget
 {

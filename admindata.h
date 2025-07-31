@@ -11,7 +11,7 @@ public:
               const QString &artisticName, const QString &realName,
               const QString &country, const QString &genre,
               const QString &bio, const QString &fecha,
-              const QString &imagePath, bool activo);
+              bool activo);
 
     static AdminData loadFromFile(const QString &filePath);
 
@@ -24,12 +24,14 @@ public:
     QString getGenre() const;
     QString getBio() const;
     QString getFecha() const;
-    QString getImagePath() const;
     bool isActive() const;
+
+    // Ruta calculada en tiempo de ejecución:
+    QString getProfileImagePath() const;
 
 private:
     int id;
-    QString username, password, artisticName, realName, country, genre, bio, fecha, imagePath;
+    QString username, password, artisticName, realName, country, genre, bio, fecha;
     bool activo;
 };
 
