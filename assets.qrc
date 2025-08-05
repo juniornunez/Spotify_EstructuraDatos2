@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>../../../Downloads/logo.png</file>
+        <file>assets/playimage.png</file>
     </qresource>
 </RCC>

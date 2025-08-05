@@ -1,9 +1,10 @@
 #include "artistsettingsui.h"
 #include <QVBoxLayout>
 #include <QFont>
+#include "addsingleui.h"
 
-ArtistSettingsUI::ArtistSettingsUI(QWidget *parent)
-    : QWidget(parent)
+ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent)
+    : QDialog(parent), adminUsername(adminUsername)
 {
     setStyleSheet("background-color: #191414;");
 
@@ -32,11 +33,34 @@ ArtistSettingsUI::ArtistSettingsUI(QWidget *parent)
         "}"
         );
 
+    // Solo esta conexión para abrir el popup de AddSingleUI
+    connect(singleButton, &QPushButton::clicked, this, [=]() {
+        AddSingleUI *addSingle = new AddSingleUI(adminUsername);
+        QDialog *dialog = new QDialog(this);
+        dialog->setWindowTitle("Subir Single");
+        dialog->setModal(true);
+        dialog->setStyleSheet("background-color: #191414;");
+
+        QVBoxLayout *dlgLayout = new QVBoxLayout(dialog);
+        dlgLayout->addWidget(addSingle);
+
+        // Cuando termine de agregar canción, cierra el dialog y manda la señal hacia arriba si la quieres usar afuera
+        connect(addSingle, &AddSingleUI::songAdded, this, [=](const QString &title, const QString &coverPath, const QString &artist){
+            emit songUploaded(title, coverPath, artist); // Señal custom
+            dialog->accept();
+            dialog->deleteLater();
+        });
+
+        dialog->exec();
+    });
+
     albumButton = new QPushButton("Subir Álbum");
     albumButton->setStyleSheet(singleButton->styleSheet());
+    connect(albumButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadAlbumClicked);
 
     epButton = new QPushButton("Subir EP");
     epButton->setStyleSheet(singleButton->styleSheet());
+    connect(epButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadEPClicked);
 
     manageMusicButton = new QPushButton("Gestionar mi música");
     manageMusicButton->setStyleSheet(
@@ -55,10 +79,6 @@ ArtistSettingsUI::ArtistSettingsUI(QWidget *parent)
         "color: #1DB954;"
         "}"
         );
-
-    connect(singleButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadSingleClicked);
-    connect(albumButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadAlbumClicked);
-    connect(epButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadEPClicked);
     connect(manageMusicButton, &QPushButton::clicked, this, &ArtistSettingsUI::manageMusicClicked);
 
     QVBoxLayout *mainLayout = new QVBoxLayout;

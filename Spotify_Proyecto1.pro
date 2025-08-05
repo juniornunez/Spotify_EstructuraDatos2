@@ -3,6 +3,7 @@ QT += core widgets
 CONFIG += c++17
 
 SOURCES += \
+    addsingleui.cpp \
     admindata.cpp \
     adminmenuui.cpp \
     adminprofileui.cpp \
@@ -12,10 +13,12 @@ SOURCES += \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
+    songcardwidget.cpp \
     userdata.cpp \
     usermenuui.cpp
 
 HEADERS += \
+    addsingleui.h \
     admindata.h \
     adminmenuui.h \
     adminprofileui.h \
@@ -24,6 +27,7 @@ HEADERS += \
     questionui.h \
     registeradminui.h \
     registerui.h \
+    songcardwidget.h \
     userdata.h \
     usermenuui.h
 

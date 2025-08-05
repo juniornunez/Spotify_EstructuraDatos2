@@ -181,9 +181,10 @@ void LoginUI::onLoginButtonClicked()
 
     // Abre el menú principal y pasa el tipo de usuario
     if (isAdmin)
-        (new AdminMenuUI(profilePicPath))->show();
+        (new AdminMenuUI(profilePicPath, username))->show();
     else
         (new UserMenuUI(profilePicPath))->show();
+
 
     this->close();
 }

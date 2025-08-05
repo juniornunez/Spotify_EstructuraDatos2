@@ -2,20 +2,26 @@
 #include <QInputDialog>
 #include <QPixmap>
 #include <QFont>
-#include <QSpacerItem>
-#include <QSizePolicy>
+#include <QPushButton>
 #include <QPainter>
 #include <QPainterPath>
-#include <QPushButton>
+#include <QScrollArea>
+#include <QHBoxLayout>
+#include <QDialog>
+#include <QLabel>
+#include <QDir>
+#include <QFile>
+#include <QDateTime>
 #include "artistsettingsui.h"
-#include <qpainter.h>
+#include "addsingleui.h"
+#include "songcardwidget.h"
 
-AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
-    : QWidget(parent)
+AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
+    : QWidget(parent), adminUsername(adminUsername)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
-    // -------- PANEL IZQUIERDO (sidebar) --------
+    // PANEL IZQUIERDO (sidebar)
     QWidget *sidebarWidget = new QWidget;
     sidebarWidget->setFixedWidth(230);
     sidebarWidget->setStyleSheet("background: #121212;");
@@ -24,7 +30,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     sidebarLayout->setContentsMargins(24, 18, 18, 24);
     sidebarLayout->setSpacing(16);
 
-    // "My Library" + botón +
+    // "My Library"
     QHBoxLayout *libraryBarLayout = new QHBoxLayout;
     QLabel *libraryLabel = new QLabel("My Library");
     QFont libraryFont = libraryLabel->font();
@@ -54,7 +60,6 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
         );
     sidebarLayout->addWidget(playlistList, 1);
 
-    // Espaciador para empujar el botón Artist Settings hasta abajo
     sidebarLayout->addStretch();
 
     // Botón "Artist Settings"
@@ -66,8 +71,6 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     sidebarLayout->addWidget(artistSettingsButton);
 
     connect(artistSettingsButton, &QPushButton::clicked, this, &AdminMenuUI::onArtistSettingsClicked);
-
-
 
     // -------- PANEL DERECHO (main panel) --------
     QWidget *mainPanelWidget = new QWidget;
@@ -139,7 +142,6 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     // Añadir barra superior al panel principal
     mainPanelLayout->addLayout(topBarLayout);
 
-    // ------------ NUEVO CONTENIDO PRINCIPAL ----------------
     // "My top songs"
     QLabel *topSongsLabel = new QLabel("My top songs");
     QFont topSongsFont = topSongsLabel->font();
@@ -149,6 +151,49 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, QWidget *parent)
     topSongsLabel->setStyleSheet("color: white;");
     mainPanelLayout->addSpacing(35);
     mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
+
+    // Contenedor de cards de canciones
+    QWidget *cardsWidget = new QWidget;
+    QHBoxLayout *cardsLayout = new QHBoxLayout(cardsWidget);
+    cardsLayout->setContentsMargins(0, 0, 0, 0);
+    cardsLayout->setSpacing(16);
+    cardsWidget->setStyleSheet("background: transparent;");
+    QScrollArea *cardsScroll = new QScrollArea;
+    cardsScroll->setWidget(cardsWidget);
+    cardsScroll->setWidgetResizable(true);
+    cardsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    cardsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    cardsScroll->setFixedHeight(270);
+    mainPanelLayout->addWidget(cardsScroll);
+
+    this->cardsLayout = cardsLayout;
+
+    // --- CARGAR TODAS LAS CANCIONES DEL FOLDER GLOBALSONGS (USANDO .DAT) ---
+    QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
+    QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &songFolder : subdirs) {
+        QDir songDir(singlesDir.absoluteFilePath(songFolder));
+
+        QString datosPath = songDir.absoluteFilePath("datos" + songFolder + ".dat");
+        if (QFile::exists(datosPath)) {
+            QFile f(datosPath);
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f);
+                in.setVersion(QDataStream::Qt_5_15);
+
+                QString title, genre, duration, desc, coverPath, audioPath, artist;
+                QDateTime created;
+                in >> title >> genre >> duration >> desc >> coverPath >> audioPath >> artist >> created;
+                f.close();
+
+                SongCardWidget *card = new SongCardWidget(coverPath, title, artist);
+                cardsLayout->addWidget(card);
+                songCards.append(card);
+
+                connect(card, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
+            }
+        }
+    }
 
     // "Top artists"
     QLabel *topArtistsLabel = new QLabel("Top artists");
@@ -188,15 +233,32 @@ void AdminMenuUI::onAddPlaylistClicked()
 
 void AdminMenuUI::onArtistSettingsClicked()
 {
-    ArtistSettingsUI *settingsWindow = new ArtistSettingsUI();
-    settingsWindow->setAttribute(Qt::WA_DeleteOnClose); // Se elimina sola al cerrar
+    ArtistSettingsUI *settingsWindow = new ArtistSettingsUI(adminUsername, this);
+    settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
     settingsWindow->show();
+
+    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const QString& title, const QString& coverPath, const QString& artist){
+        SongCardWidget *newCard = new SongCardWidget(coverPath, title, artist);
+        this->cardsLayout->addWidget(newCard);
+        songCards.append(newCard);
+        connect(newCard, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
+    });
 }
 
 void AdminMenuUI::onProfilePicClicked()
 {
-    // Aquí podrías abrir una ventana de perfil, opciones, o lo que prefieras.
-    // Por ejemplo: ProfileOptionsUI *options = new ProfileOptionsUI(); options->show();
-    // QMessageBox::information(this, "Perfil", "Aquí irán opciones del perfil.");
+    // Opcional: puedes abrir el perfil de admin aquí
 }
 
+void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
+{
+    if (nowSelected) {
+        // Deselecciona todas menos esta
+        for (SongCardWidget* c : songCards) {
+            if (c != card) c->setSelected(false);
+        }
+        currentSelectedCard = card;
+    } else {
+        if (currentSelectedCard == card) currentSelectedCard = nullptr;
+    }
+}

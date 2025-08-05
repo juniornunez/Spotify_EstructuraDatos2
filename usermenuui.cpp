@@ -4,8 +4,12 @@
 #include <QFont>
 #include <QPainter>
 #include <QPainterPath>
-#include <QSizePolicy>
 #include <QPushButton>
+#include <QDir>
+#include <QFile>
+#include <QDateTime>
+#include <QScrollArea>
+#include "songcardwidget.h"
 
 UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     : QWidget(parent)
@@ -50,6 +54,8 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
         "QListWidget::item:selected { background: #282828; color: #1ED760; }"
         );
     sidebarLayout->addWidget(playlistList, 1);
+
+    sidebarLayout->addStretch();
 
     // -------- PANEL DERECHO (main panel) --------
     QWidget *mainPanelWidget = new QWidget;
@@ -121,7 +127,6 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     // Añadir barra superior al panel principal
     mainPanelLayout->addLayout(topBarLayout);
 
-    // ------------ NUEVO CONTENIDO PRINCIPAL ----------------
     // "My top songs"
     QLabel *topSongsLabel = new QLabel("My top songs");
     QFont topSongsFont = topSongsLabel->font();
@@ -131,6 +136,49 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     topSongsLabel->setStyleSheet("color: white;");
     mainPanelLayout->addSpacing(35);
     mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
+
+    // --- Cards de canciones con scroll ---
+    QWidget *cardsWidget = new QWidget;
+    QHBoxLayout *cardsLayout = new QHBoxLayout(cardsWidget);
+    cardsLayout->setContentsMargins(0, 0, 0, 0);
+    cardsLayout->setSpacing(16);
+    cardsWidget->setStyleSheet("background: transparent;");
+    QScrollArea *cardsScroll = new QScrollArea;
+    cardsScroll->setWidget(cardsWidget);
+    cardsScroll->setWidgetResizable(true);
+    cardsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    cardsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    cardsScroll->setFixedHeight(270);
+    mainPanelLayout->addWidget(cardsScroll);
+
+    this->cardsLayout = cardsLayout;
+
+    // --- CARGAR TODAS LAS CANCIONES DEL FOLDER GLOBALSONGS (USANDO .DAT) ---
+    QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
+    QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &songFolder : subdirs) {
+        QDir songDir(singlesDir.absoluteFilePath(songFolder));
+
+        QString datosPath = songDir.absoluteFilePath("datos" + songFolder + ".dat");
+        if (QFile::exists(datosPath)) {
+            QFile f(datosPath);
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f);
+                in.setVersion(QDataStream::Qt_5_15);
+
+                QString title, genre, duration, desc, coverPath, audioPath, artist;
+                QDateTime created;
+                in >> title >> genre >> duration >> desc >> coverPath >> audioPath >> artist >> created;
+                f.close();
+
+                SongCardWidget *card = new SongCardWidget(coverPath, title, artist);
+                cardsLayout->addWidget(card);
+                songCards.append(card);
+
+                connect(card, &SongCardWidget::toggled, this, &UserMenuUI::handleCardToggled);
+            }
+        }
+    }
 
     // "Top artists"
     QLabel *topArtistsLabel = new QLabel("Top artists");
@@ -172,4 +220,13 @@ void UserMenuUI::onProfilePicClicked()
 {
     // Aquí podrías abrir una ventana de perfil, opciones, etc.
     // QMessageBox::information(this, "Perfil", "Aquí irán opciones del usuario.");
+}
+
+void UserMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
+{
+    if (nowSelected) {
+        for (SongCardWidget* other : songCards) {
+            if (other != card) other->setSelected(false);
+        }
+    }
 }
