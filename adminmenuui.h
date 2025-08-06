@@ -11,6 +11,7 @@
 #include <QVector>
 
 class SongCardWidget;
+class PlayBarUI;
 
 class AdminMenuUI : public QWidget
 {
@@ -20,28 +21,30 @@ public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
     ~AdminMenuUI();
 
-private:
-    QString adminUsername;
-    QVector<SongCardWidget*> songCards;
-    SongCardWidget* currentSelectedCard = nullptr;
-
-    QVBoxLayout *sidebarLayout;
-    QHBoxLayout *topBarLayout;
-    QVBoxLayout *mainPanelLayout;
-    QHBoxLayout *mainLayout;
-    QListWidget *playlistList;
-    QPushButton *addPlaylistButton;
-    QPushButton *profilePicButton;
-    QLineEdit *searchBar;
-    QLabel *homeIconLabel;
-    QHBoxLayout *cardsLayout;
-    QPushButton *artistSettingsButton;
-
 private slots:
     void onAddPlaylistClicked();
     void onArtistSettingsClicked();
     void onProfilePicClicked();
     void handleCardToggled(SongCardWidget* card, bool nowSelected);
+    void handlePlayButtonPressed(SongCardWidget* card);
+
+private:
+    QString adminUsername;
+    QVector<SongCardWidget*> songCards;
+    QVBoxLayout *sidebarLayout;
+    QHBoxLayout *topBarLayout;
+    QVBoxLayout *mainPanelLayout;
+    QHBoxLayout *mainLayout;
+    QHBoxLayout *cardsLayout;
+    QListWidget *playlistList;
+    QPushButton *addPlaylistButton;
+    QPushButton *profilePicButton;
+    QLineEdit *searchBar;
+    QLabel *homeIconLabel;
+    QPushButton *artistSettingsButton;
+
+    SongCardWidget* currentSelectedCard = nullptr;
+    PlayBarUI* playBar = nullptr;
 };
 
 #endif // ADMINMENUUI_H

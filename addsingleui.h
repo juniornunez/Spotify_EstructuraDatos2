@@ -17,7 +17,8 @@ public:
     explicit AddSingleUI(const QString& adminUsername, QWidget *parent = nullptr);
 
 signals:
-    void songAdded(const QString& title, const QString& coverPath, const QString& artist); // Puedes cambiar por SongData*
+    void songAdded(const QString &title, const QString &coverPath, const QString &artist, const QString &audioPath);
+
 
 private slots:
     void onSelectCoverClicked();

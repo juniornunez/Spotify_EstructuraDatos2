@@ -158,7 +158,6 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (const QString &songFolder : subdirs) {
         QDir songDir(singlesDir.absoluteFilePath(songFolder));
-
         QString datosPath = songDir.absoluteFilePath("datos" + songFolder + ".dat");
         if (QFile::exists(datosPath)) {
             QFile f(datosPath);
@@ -171,7 +170,7 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
                 in >> title >> genre >> duration >> desc >> coverPath >> audioPath >> artist >> created;
                 f.close();
 
-                SongCardWidget *card = new SongCardWidget(coverPath, title, artist);
+                SongCardWidget *card = new SongCardWidget(coverPath, title, artist, audioPath);
                 cardsLayout->addWidget(card);
                 songCards.append(card);
 

@@ -45,11 +45,12 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         dlgLayout->addWidget(addSingle);
 
         // Cuando termine de agregar canción, cierra el dialog y manda la señal hacia arriba si la quieres usar afuera
-        connect(addSingle, &AddSingleUI::songAdded, this, [=](const QString &title, const QString &coverPath, const QString &artist){
-            emit songUploaded(title, coverPath, artist); // Señal custom
+        connect(addSingle, &AddSingleUI::songAdded, this, [=](const QString &title, const QString &coverPath, const QString &artist, const QString &audioPath){
+            emit songUploaded(title, coverPath, artist, audioPath); // ¡Ahora pasa el cuarto parámetro!
             dialog->accept();
             dialog->deleteLater();
         });
+
 
         dialog->exec();
     });

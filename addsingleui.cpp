@@ -113,31 +113,29 @@ void AddSingleUI::onCreateSongClicked() {
     QString safeSongTitle = songTitle;
     safeSongTitle.replace(QRegularExpression(R"([\[\]\\/:*?"<>|])"), "_");
 
-    // ---- Carpetas destino ----
     QString baseDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/";
     QString globalSongDir = baseDir + "globalsongs/" + safeSongTitle;
     QString adminSongDir = baseDir + "admindata/" + adminUsername + "/artistsongs/" + safeSongTitle;
 
-    // 1. Crear folder y copiar archivos
     QString coverGlobal = copyFileTo(selectedCoverPath, globalSongDir);
     QString audioGlobal = copyFileTo(selectedAudioPath, globalSongDir);
 
     QString coverAdmin = copyFileTo(selectedCoverPath, adminSongDir);
     QString audioAdmin = copyFileTo(selectedAudioPath, adminSongDir);
 
-    // 2. Guardar datos de la canción en cada carpeta
     saveSongData(globalSongDir, songTitle, genreCombo->currentText(), durationEdit->text().trimmed(),
                  descEdit->toPlainText().trimmed(), coverGlobal, audioGlobal, adminUsername);
 
     saveSongData(adminSongDir, songTitle, genreCombo->currentText(), durationEdit->text().trimmed(),
                  descEdit->toPlainText().trimmed(), coverAdmin, audioAdmin, adminUsername);
 
-    // 3. Emitir señal para actualizar cards en UI
-    emit songAdded(songTitle, coverAdmin, adminUsername);
+    // --------- ¡¡AQUÍ CORRIGE!! ---------
+    emit songAdded(songTitle, coverAdmin, adminUsername, audioAdmin);
 
     QMessageBox::information(this, "Success", "Song uploaded successfully!");
     resetForm();
 }
+
 
 void AddSingleUI::saveSongData(const QString& dir, const QString& title, const QString& genre,
                                const QString& duration, const QString& desc, const QString& coverPath,

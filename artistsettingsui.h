@@ -2,8 +2,8 @@
 #define ARTISTSETTINGSUI_H
 
 #include <QDialog>
-#include <QPushButton>
 #include <QLabel>
+#include <QPushButton>
 
 class ArtistSettingsUI : public QDialog
 {
@@ -14,12 +14,12 @@ public:
     ~ArtistSettingsUI();
 
 signals:
-    void songUploaded(const QString &title, const QString &coverPath, const QString &artist); // <-- ESTA
+    void songUploaded(const QString &title, const QString &coverPath, const QString &artist, const QString &audioPath);
 
-    void uploadSingleClicked();
-    void uploadAlbumClicked();
-    void uploadEPClicked();
-    void manageMusicClicked();
+private slots:
+    void uploadAlbumClicked() {}
+    void uploadEPClicked() {}
+    void manageMusicClicked() {}
 
 private:
     QString adminUsername;

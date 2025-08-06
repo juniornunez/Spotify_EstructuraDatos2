@@ -9,8 +9,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QVector>
-
-class SongCardWidget;
+#include "songcardwidget.h"
 
 class UserMenuUI : public QWidget
 {
@@ -26,15 +25,12 @@ private slots:
     void handleCardToggled(SongCardWidget* card, bool nowSelected);
 
 private:
-    QVector<SongCardWidget*> songCards;
-    SongCardWidget* currentSelectedCard = nullptr;
-
     QVBoxLayout *sidebarLayout;
     QVBoxLayout *mainPanelLayout;
     QHBoxLayout *mainLayout;
     QHBoxLayout *topBarLayout;
     QHBoxLayout *cardsLayout;
-
+    QVector<SongCardWidget*> songCards;
     QLabel *homeIconLabel;
     QLineEdit *searchBar;
     QPushButton *profilePicButton;

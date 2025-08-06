@@ -1,4 +1,5 @@
 QT += core widgets
+QT += multimedia
 
 CONFIG += c++17
 
@@ -10,6 +11,7 @@ SOURCES += \
     artistsettingsui.cpp \
     main.cpp \
     loginUI.cpp \
+    playbarui.cpp \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
@@ -24,6 +26,7 @@ HEADERS += \
     adminprofileui.h \
     artistsettingsui.h \
     loginUI.h \
+    playbarui.h \
     questionui.h \
     registeradminui.h \
     registerui.h \

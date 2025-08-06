@@ -15,6 +15,7 @@
 #include "artistsettingsui.h"
 #include "addsingleui.h"
 #include "songcardwidget.h"
+#include "playbarui.h"
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername)
@@ -186,11 +187,13 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
                 in >> title >> genre >> duration >> desc >> coverPath >> audioPath >> artist >> created;
                 f.close();
 
-                SongCardWidget *card = new SongCardWidget(coverPath, title, artist);
+                // Pasa la ruta absoluta del audio:
+                SongCardWidget *card = new SongCardWidget(coverPath, title, artist, songDir.absoluteFilePath(audioPath));
                 cardsLayout->addWidget(card);
                 songCards.append(card);
 
                 connect(card, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
+                connect(card, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
             }
         }
     }
@@ -206,6 +209,11 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
 
     mainPanelLayout->addStretch();
+
+    // ---- BARRA DE REPRODUCCIÓN ----
+    playBar = new PlayBarUI;
+    playBar->setVisible(false); // Oculta hasta que se le de play a algo
+    mainPanelLayout->addWidget(playBar);
 
     // ---- LAYOUT PRINCIPAL ----
     mainLayout = new QHBoxLayout(this);
@@ -237,11 +245,12 @@ void AdminMenuUI::onArtistSettingsClicked()
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
     settingsWindow->show();
 
-    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const QString& title, const QString& coverPath, const QString& artist){
-        SongCardWidget *newCard = new SongCardWidget(coverPath, title, artist);
+    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const QString& title, const QString& coverPath, const QString& artist, const QString& audioPath){
+        SongCardWidget *newCard = new SongCardWidget(coverPath, title, artist, audioPath);
         this->cardsLayout->addWidget(newCard);
         songCards.append(newCard);
         connect(newCard, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
+        connect(newCard, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
     });
 }
 
@@ -253,7 +262,6 @@ void AdminMenuUI::onProfilePicClicked()
 void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
 {
     if (nowSelected) {
-        // Deselecciona todas menos esta
         for (SongCardWidget* c : songCards) {
             if (c != card) c->setSelected(false);
         }
@@ -261,4 +269,12 @@ void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
     } else {
         if (currentSelectedCard == card) currentSelectedCard = nullptr;
     }
+}
+
+void AdminMenuUI::handlePlayButtonPressed(SongCardWidget* card)
+{
+    // Recoge los datos de la canción y pásalos a la barra
+    playBar->setSongInfo(card->getCover(), card->getTitle(), card->getArtist(), card->getAudioPath());
+    playBar->setVisible(true);
+    playBar->play(); // Este método debe cambiar el ícono y llamar a player->play()
 }

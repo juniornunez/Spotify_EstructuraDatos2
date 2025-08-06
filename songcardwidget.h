@@ -14,17 +14,25 @@ public:
     explicit SongCardWidget(const QString& coverPath,
                             const QString& title,
                             const QString& artist,
+                            const QString& audioPath,
                             QWidget *parent = nullptr);
 
     void setCover(const QString& coverPath);
     void setTitle(const QString& title);
     void setArtist(const QString& artist);
 
-    void setSelected(bool selected);
+    void setSelected(bool s);
     bool isSelected() const;
+
+    // Getters para PlayBarUI
+    QString getCover() const { return coverPath_; }
+    QString getTitle() const { return title_; }
+    QString getArtist() const { return artist_; }
+    QString getAudioPath() const { return audioPath_; }
 
 signals:
     void toggled(SongCardWidget* card, bool selected);
+    void playPressed(SongCardWidget* card);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -38,6 +46,8 @@ private:
     QPushButton *playButton;
 
     bool selected = false;
+    QString coverPath_, title_, artist_, audioPath_;
 };
 
 #endif // SONGCARDWIDGET_H
+

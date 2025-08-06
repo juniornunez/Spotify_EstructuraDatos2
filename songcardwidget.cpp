@@ -7,8 +7,13 @@
 SongCardWidget::SongCardWidget(const QString& coverPath,
                                const QString& title,
                                const QString& artist,
+                               const QString& audioPath,
                                QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+    coverPath_(coverPath),
+    title_(title),
+    artist_(artist),
+    audioPath_(audioPath)
 {
     setFixedSize(180, 245);
     setStyleSheet("background: #191414; border-radius: 18px; border: none;");
@@ -21,13 +26,13 @@ SongCardWidget::SongCardWidget(const QString& coverPath,
     coverLabel = new QLabel(this);
     coverLabel->setFixedSize(160, 160);
     coverLabel->setStyleSheet("border-radius: 10px; background: #222;");
-    setCover(coverPath);
+    setCover(coverPath_);
 
     // Play button (oculto por defecto)
     playButton = new QPushButton(this);
     playButton->setFixedSize(54, 54);
-    playButton->setIcon(QIcon(":/assets/playimage.png"));  // Ícono de play que quieres
-    playButton->setIconSize(QSize(32, 32));               // Ajusta el tamaño según tu imagen
+    playButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/playimage.png"));
+    playButton->setIconSize(QSize(32, 32));
     playButton->setStyleSheet(
         "QPushButton {"
         "background: #1ED760;"
@@ -40,9 +45,8 @@ SongCardWidget::SongCardWidget(const QString& coverPath,
     playButton->move((width() - playButton->width())/2, 26 + (160-54)/2);
     playButton->hide();
 
-
     connect(playButton, &QPushButton::clicked, this, [=]() {
-        // En el futuro: código para reproducir
+        emit playPressed(this);
     });
 
     mainLayout->addWidget(coverLabel, 0, Qt::AlignHCenter);
@@ -55,7 +59,7 @@ SongCardWidget::SongCardWidget(const QString& coverPath,
     titleFont.setBold(true);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet("color: white;");
-    setTitle(title);
+    setTitle(title_);
 
     // Artist label
     artistLabel = new QLabel(this);
@@ -63,7 +67,7 @@ SongCardWidget::SongCardWidget(const QString& coverPath,
     artistFont.setPointSize(10);
     artistLabel->setFont(artistFont);
     artistLabel->setStyleSheet("color: #b3b3b3;");
-    setArtist(artist);
+    setArtist(artist_);
 
     mainLayout->addWidget(titleLabel, 0, Qt::AlignLeft);
     mainLayout->addWidget(artistLabel, 0, Qt::AlignLeft);
@@ -72,6 +76,7 @@ SongCardWidget::SongCardWidget(const QString& coverPath,
 }
 
 void SongCardWidget::setCover(const QString& coverPath) {
+    coverPath_ = coverPath;
     QPixmap pix(coverPath);
     if (!pix.isNull()) {
         coverLabel->setPixmap(pix.scaled(160, 160, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
@@ -83,15 +88,17 @@ void SongCardWidget::setCover(const QString& coverPath) {
 }
 
 void SongCardWidget::setTitle(const QString& title) {
+    title_ = title;
     titleLabel->setText(title);
 }
 
 void SongCardWidget::setArtist(const QString& artist) {
+    artist_ = artist;
     artistLabel->setText(artist);
 }
 
 void SongCardWidget::mousePressEvent(QMouseEvent *event) {
-    setSelected(!selected); // Toggle
+    setSelected(!selected);
     emit toggled(this, selected);
     QWidget::mousePressEvent(event);
 }
