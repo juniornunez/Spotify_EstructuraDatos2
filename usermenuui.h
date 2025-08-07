@@ -3,39 +3,46 @@
 
 #include <QWidget>
 #include <QListWidget>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLineEdit>
 #include <QPushButton>
+#include <QLineEdit>
 #include <QLabel>
-#include <QVector>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include "songcardwidget.h"
+#include "playbarui.h"
 
 class UserMenuUI : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit UserMenuUI(const QString &profilePicPath, QWidget *parent = nullptr);
+    UserMenuUI(const QString &profilePicPath, const QString &username, QWidget *parent = nullptr);
     ~UserMenuUI();
 
 private slots:
     void onAddPlaylistClicked();
     void onProfilePicClicked();
     void handleCardToggled(SongCardWidget* card, bool nowSelected);
+    void handlePlayButtonPressed(const QString &audioPath, const QString &cover, const QString &title, const QString &artist);
 
 private:
+    QString m_username;
+    QString m_profilePicPath;
+
     QVBoxLayout *sidebarLayout;
     QVBoxLayout *mainPanelLayout;
     QHBoxLayout *mainLayout;
     QHBoxLayout *topBarLayout;
     QHBoxLayout *cardsLayout;
-    QVector<SongCardWidget*> songCards;
+
+    QListWidget *playlistList;
+    QPushButton *addPlaylistButton;
+    QPushButton *profilePicButton;
     QLabel *homeIconLabel;
     QLineEdit *searchBar;
-    QPushButton *profilePicButton;
-    QPushButton *addPlaylistButton;
-    QListWidget *playlistList;
+    QPushButton *trendingButton;
+    QList<SongCardWidget*> songCards;
+    PlayBarUI *playBar;
 };
 
 #endif // USERMENUUI_H

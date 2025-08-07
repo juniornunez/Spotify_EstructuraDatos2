@@ -43,7 +43,7 @@ private:
     QLineEdit *searchBar;
     QLabel *homeIconLabel;
     QPushButton *artistSettingsButton;
-
+    QPushButton *trendingButton;
     SongCardWidget* currentSelectedCard = nullptr;
     PlayBarUI* playBar = nullptr;
 };

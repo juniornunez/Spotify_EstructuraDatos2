@@ -1,18 +1,21 @@
 #include "usermenuui.h"
+#include "userprofileui.h"
+#include "loginui.h"
 #include <QInputDialog>
 #include <QPixmap>
 #include <QFont>
 #include <QPainter>
 #include <QPainterPath>
-#include <QPushButton>
 #include <QDir>
 #include <QFile>
 #include <QDateTime>
 #include <QScrollArea>
-#include "songcardwidget.h"
-
-UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
-    : QWidget(parent)
+#include <QMenu>
+#include "trendingui.h"
+UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, QWidget *parent)
+    : QWidget(parent),
+    m_username(username),
+    m_profilePicPath(profilePicPath)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -68,7 +71,7 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     topBarLayout = new QHBoxLayout;
     topBarLayout->setSpacing(16);
 
-    //Home
+    // Home
     homeIconLabel = new QLabel;
     QPixmap homeIconPixmap("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/homeicon.png");
     homeIconLabel->setPixmap(homeIconPixmap.scaled(36, 36, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -119,6 +122,23 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
             "border-radius: 24px; background: #282828; color: #999; font-size: 20pt; border: none; }"
             );
     }
+
+
+    // Botón "Trending"
+    trendingButton = new QPushButton("Trending");
+    trendingButton->setStyleSheet(
+        "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
+        "QPushButton:hover { background-color: #282828; color: #fff; }"
+        );
+    sidebarLayout->addWidget(trendingButton);
+
+    // Conexión para abrir el TrendingUI
+    connect(trendingButton, &QPushButton::clicked, this, [this]() {
+        TrendingUI *trendWin = new TrendingUI(this);
+        trendWin->setAttribute(Qt::WA_DeleteOnClose);
+        trendWin->show();
+    });
+
 
     topBarLayout->addWidget(profilePicButton, 0, Qt::AlignRight);
 
@@ -175,12 +195,16 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
                 songCards.append(card);
 
                 connect(card, &SongCardWidget::toggled, this, &UserMenuUI::handleCardToggled);
+                // CONECTA PARA REPRODUCCIÓN
+                connect(card, &SongCardWidget::playPressed, this, [=]() {
+                    this->handlePlayButtonPressed(audioPath, coverPath, title, artist);
+                });
             }
         }
     }
 
     // "Top artists"
-    QLabel *topArtistsLabel = new QLabel("Top artists");
+    QLabel *topArtistsLabel = new QLabel("Watch out this artists");
     QFont topArtistsFont = topArtistsLabel->font();
     topArtistsFont.setPointSize(22);
     topArtistsFont.setBold(true);
@@ -190,6 +214,11 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, QWidget *parent)
     mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
 
     mainPanelLayout->addStretch();
+
+    // ---- BARRA DE REPRODUCCIÓN ----
+    playBar = new PlayBarUI;
+    playBar->setVisible(false);
+    mainPanelLayout->addWidget(playBar);
 
     // ---- LAYOUT PRINCIPAL ----
     mainLayout = new QHBoxLayout(this);
@@ -217,8 +246,33 @@ void UserMenuUI::onAddPlaylistClicked()
 
 void UserMenuUI::onProfilePicClicked()
 {
-    // Aquí podrías abrir una ventana de perfil, opciones, etc.
-    // QMessageBox::information(this, "Perfil", "Aquí irán opciones del usuario.");
+    QMenu *menu = new QMenu(this);
+
+    QAction *profileAction = new QAction("Ver Perfil", this);
+    QAction *signOutAction = new QAction("Sign Out", this);
+
+    menu->addAction(profileAction);
+    menu->addSeparator();
+    menu->addAction(signOutAction);
+
+    connect(profileAction, &QAction::triggered, this, [this]() {
+        UserProfileUI *profileWindow = new UserProfileUI(m_username);
+        profileWindow->setAttribute(Qt::WA_DeleteOnClose);
+        profileWindow->setWindowModality(Qt::ApplicationModal);
+        profileWindow->show();
+        profileWindow->raise();
+        profileWindow->activateWindow();
+    });
+
+    connect(signOutAction, &QAction::triggered, this, [this]() {
+        QWidget *login = new LoginUI();
+        login->setAttribute(Qt::WA_DeleteOnClose);
+        login->show();
+        this->window()->close();
+    });
+
+    QPoint pos = profilePicButton->mapToGlobal(QPoint(0, profilePicButton->height()));
+    menu->exec(pos);
 }
 
 void UserMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
@@ -228,4 +282,12 @@ void UserMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
             if (other != card) other->setSelected(false);
         }
     }
+}
+
+// --- ESTA ES LA FUNCIÓN CLAVE PARA LA REPRODUCCIÓN DE AUDIO ---
+void UserMenuUI::handlePlayButtonPressed(const QString &audioPath, const QString &cover, const QString &title, const QString &artist)
+{
+    playBar->setSongInfo(cover, title, artist, audioPath);
+    playBar->setVisible(true);
+    playBar->play();
 }

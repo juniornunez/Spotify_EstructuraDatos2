@@ -183,7 +183,7 @@ void LoginUI::onLoginButtonClicked()
     if (isAdmin)
         (new AdminMenuUI(profilePicPath, username))->show();
     else
-        (new UserMenuUI(profilePicPath))->show();
+        (new UserMenuUI(profilePicPath,username))->show();
 
 
     this->close();

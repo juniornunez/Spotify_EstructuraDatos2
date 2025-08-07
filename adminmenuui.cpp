@@ -19,6 +19,7 @@
 #include "adminprofileui.h"
 #include <QMenu>
 #include "loginUI.h"
+#include "trendingui.h"
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath)
@@ -65,6 +66,21 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     sidebarLayout->addWidget(playlistList, 1);
 
     sidebarLayout->addStretch();
+
+    // Botón "Trending"
+    trendingButton = new QPushButton("Trending");
+    trendingButton->setStyleSheet(
+        "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
+        "QPushButton:hover { background-color: #282828; color: #fff; }"
+        );
+    sidebarLayout->addWidget(trendingButton);
+
+    // Conexión para abrir el TrendingUI
+    connect(trendingButton, &QPushButton::clicked, this, [this]() {
+        TrendingUI *trendWin = new TrendingUI(this);
+        trendWin->setAttribute(Qt::WA_DeleteOnClose);
+        trendWin->show();
+    });
 
     // Botón "Artist Settings"
     artistSettingsButton = new QPushButton("Artist Settings");
@@ -202,7 +218,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     }
 
     // "Top artists"
-    QLabel *topArtistsLabel = new QLabel("Top artists");
+    QLabel *topArtistsLabel = new QLabel("Watch out this artists");
     QFont topArtistsFont = topArtistsLabel->font();
     topArtistsFont.setPointSize(22);
     topArtistsFont.setBold(true);
