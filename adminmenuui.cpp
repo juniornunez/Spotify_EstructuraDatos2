@@ -16,9 +16,12 @@
 #include "addsingleui.h"
 #include "songcardwidget.h"
 #include "playbarui.h"
+#include "adminprofileui.h"
+#include <QMenu>
+#include "loginUI.h"
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
-    : QWidget(parent), adminUsername(adminUsername)
+    : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -256,8 +259,38 @@ void AdminMenuUI::onArtistSettingsClicked()
 
 void AdminMenuUI::onProfilePicClicked()
 {
-    // Opcional: puedes abrir el perfil de admin aquí
+    QMenu *menu = new QMenu(this);
+
+    QAction *profileAction = new QAction("Ver Perfil", this);
+    QAction *signOutAction = new QAction("Sign Out", this);
+
+    menu->addAction(profileAction);
+    menu->addSeparator();
+    menu->addAction(signOutAction);
+
+    // Conecta acciones
+    connect(profileAction, &QAction::triggered, this, [this]() {
+        // Crea y muestra el perfil del admin
+        AdminProfileUI *profileWindow = new AdminProfileUI(profilePicPath, adminUsername);
+        profileWindow->setAttribute(Qt::WA_DeleteOnClose); // Se destruye al cerrar
+        profileWindow->show();
+        profileWindow->raise();
+        profileWindow->activateWindow();
+    });
+
+    connect(signOutAction, &QAction::triggered, this, [this]() {
+        // Cierra la ventana principal y muestra el login
+        QWidget *login = new LoginUI();
+        login->setAttribute(Qt::WA_DeleteOnClose);
+        login->show();
+        this->window()->close();
+    });
+
+    // Muestra el menú debajo del botón
+    QPoint pos = profilePicButton->mapToGlobal(QPoint(0, profilePicButton->height()));
+    menu->exec(pos);
 }
+
 
 void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
 {

@@ -17,7 +17,8 @@ SOURCES += \
     registerui.cpp \
     songcardwidget.cpp \
     userdata.cpp \
-    usermenuui.cpp
+    usermenuui.cpp \
+    userprofileui.cpp
 
 HEADERS += \
     addsingleui.h \
@@ -32,7 +33,8 @@ HEADERS += \
     registerui.h \
     songcardwidget.h \
     userdata.h \
-    usermenuui.h
+    usermenuui.h \
+    userprofileui.h
 
 FORMS += \
 

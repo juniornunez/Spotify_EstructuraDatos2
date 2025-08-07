@@ -20,7 +20,7 @@ class AdminMenuUI : public QWidget
 public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
     ~AdminMenuUI();
-
+    QString profilePicPath;
 private slots:
     void onAddPlaylistClicked();
     void onArtistSettingsClicked();
@@ -29,6 +29,7 @@ private slots:
     void handlePlayButtonPressed(SongCardWidget* card);
 
 private:
+
     QString adminUsername;
     QVector<SongCardWidget*> songCards;
     QVBoxLayout *sidebarLayout;
