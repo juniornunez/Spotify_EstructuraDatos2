@@ -2,16 +2,15 @@
 #define ADMINMENUUI_H
 
 #include <QWidget>
-#include <QPushButton>
-#include <QLabel>
-#include <QListWidget>
-#include <QLineEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QVector>
-
-class SongCardWidget;
-class PlayBarUI;
+#include <QListWidget>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QLabel>
+#include "songcardwidget.h"
+#include "artistcardwidget.h"
+#include "playbarui.h"
 
 class AdminMenuUI : public QWidget
 {
@@ -20,7 +19,7 @@ class AdminMenuUI : public QWidget
 public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
     ~AdminMenuUI();
-    QString profilePicPath;
+
 private slots:
     void onAddPlaylistClicked();
     void onArtistSettingsClicked();
@@ -29,23 +28,27 @@ private slots:
     void handlePlayButtonPressed(SongCardWidget* card);
 
 private:
-
     QString adminUsername;
-    QVector<SongCardWidget*> songCards;
+    QString profilePicPath;
+
     QVBoxLayout *sidebarLayout;
-    QHBoxLayout *topBarLayout;
     QVBoxLayout *mainPanelLayout;
     QHBoxLayout *mainLayout;
-    QHBoxLayout *cardsLayout;
+    QHBoxLayout *topBarLayout;
+    QHBoxLayout *cardsLayout; // para canciones
+
     QListWidget *playlistList;
     QPushButton *addPlaylistButton;
+    QPushButton *trendingButton;
+    QPushButton *artistSettingsButton;
     QPushButton *profilePicButton;
     QLineEdit *searchBar;
     QLabel *homeIconLabel;
-    QPushButton *artistSettingsButton;
-    QPushButton *trendingButton;
+
+    QList<SongCardWidget*> songCards;
     SongCardWidget* currentSelectedCard = nullptr;
-    PlayBarUI* playBar = nullptr;
+    QList<ArtistCardWidget*> artistCards;
+    PlayBarUI *playBar;
 };
 
 #endif // ADMINMENUUI_H

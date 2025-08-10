@@ -8,6 +8,7 @@ SOURCES += \
     admindata.cpp \
     adminmenuui.cpp \
     adminprofileui.cpp \
+    artistcardwidget.cpp \
     artistsettingsui.cpp \
     main.cpp \
     loginUI.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     admindata.h \
     adminmenuui.h \
     adminprofileui.h \
+    artistcardwidget.h \
     artistsettingsui.h \
     loginUI.h \
     playbarui.h \

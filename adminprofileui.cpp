@@ -226,10 +226,10 @@ void AdminProfileUI::loadAdminData(const QString &adminUsername)
     QFile file(filePath);
     if (!file.exists()) {
         qWarning() << "No se encontró perfil para admin" << adminUsername;
-        m_realName = "Nombre no encontrado";
+        m_realName = "Aca va el nombre";
         m_stageName = adminUsername;
-        m_country = "Desconocido";
-        m_bio = "";
+        m_country = "Aca va el pais";
+        m_bio = " Aca va la bio no lo he puesto inge es avance usted dijo";
         return;
     }
 
@@ -244,4 +244,5 @@ void AdminProfileUI::loadAdminData(const QString &adminUsername)
         m_bio = bio;
         file.close();
     }
+
 }
