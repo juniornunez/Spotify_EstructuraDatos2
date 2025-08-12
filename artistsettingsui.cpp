@@ -33,7 +33,7 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         "}"
         );
 
-    // Solo esta conexión para abrir el popup de AddSingleUI
+    // ✅ Conexión para abrir AddSingleUI y devolver SongData
     connect(singleButton, &QPushButton::clicked, this, [=]() {
         AddSingleUI *addSingle = new AddSingleUI(adminUsername);
         QDialog *dialog = new QDialog(this);
@@ -44,13 +44,12 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         QVBoxLayout *dlgLayout = new QVBoxLayout(dialog);
         dlgLayout->addWidget(addSingle);
 
-        // Cuando termine de agregar canción, cierra el dialog y manda la señal hacia arriba si la quieres usar afuera
-        connect(addSingle, &AddSingleUI::songAdded, this, [=](const QString &title, const QString &coverPath, const QString &artist, const QString &audioPath){
-            emit songUploaded(title, coverPath, artist, audioPath); // ¡Ahora pasa el cuarto parámetro!
+        // Cuando se añade la canción, cerramos y emitimos SongData completo
+        connect(addSingle, &AddSingleUI::songAdded, this, [=](const SongData &song) {
+            emit songUploaded(song); // ✅ Enviamos SongData completo
             dialog->accept();
             dialog->deleteLater();
         });
-
 
         dialog->exec();
     });
@@ -99,3 +98,15 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
 }
 
 ArtistSettingsUI::~ArtistSettingsUI() {}
+
+void ArtistSettingsUI::uploadAlbumClicked() {
+    // TODO: lógica para subir álbum
+}
+
+void ArtistSettingsUI::uploadEPClicked() {
+    // TODO: lógica para subir EP
+}
+
+void ArtistSettingsUI::manageMusicClicked() {
+    // TODO: lógica para gestionar música
+}

@@ -17,6 +17,7 @@ SOURCES += \
     registeradminui.cpp \
     registerui.cpp \
     songcardwidget.cpp \
+    songdata.cpp \
     trendingui.cpp \
     userdata.cpp \
     usermenuui.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     registeradminui.h \
     registerui.h \
     songcardwidget.h \
+    songdata.h \
     trendingui.h \
     userdata.h \
     usermenuui.h \

@@ -4,10 +4,13 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QListWidget>
 #include <QPushButton>
-#include <QLineEdit>
 #include <QLabel>
+#include <QListWidget>
+#include <QLineEdit>
+#include <QMenu>
+#include <QHash>
+#include "songdata.h"
 #include "songcardwidget.h"
 #include "artistcardwidget.h"
 #include "playbarui.h"
@@ -33,22 +36,26 @@ private:
 
     QVBoxLayout *sidebarLayout;
     QVBoxLayout *mainPanelLayout;
-    QHBoxLayout *mainLayout;
     QHBoxLayout *topBarLayout;
-    QHBoxLayout *cardsLayout; // para canciones
+    QHBoxLayout *cardsLayout;
+    QHBoxLayout *mainLayout;
 
-    QListWidget *playlistList;
     QPushButton *addPlaylistButton;
+    QListWidget *playlistList;
     QPushButton *trendingButton;
     QPushButton *artistSettingsButton;
     QPushButton *profilePicButton;
-    QLineEdit *searchBar;
     QLabel *homeIconLabel;
+    QLineEdit *searchBar;
+
+    PlayBarUI *playBar;
+    SongCardWidget *currentSelectedCard = nullptr;
 
     QList<SongCardWidget*> songCards;
-    SongCardWidget* currentSelectedCard = nullptr;
     QList<ArtistCardWidget*> artistCards;
-    PlayBarUI *playBar;
+
+    // 🔹 Hash para almacenar canciones con su ID único
+    QHash<QString, SongData> songHash;
 };
 
 #endif // ADMINMENUUI_H

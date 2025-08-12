@@ -1,4 +1,5 @@
 #include "addsingleui.h"
+#include "SongData.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileDialog>
@@ -7,13 +8,13 @@
 #include <QDir>
 #include <QDateTime>
 #include <QRegularExpression>
+#include <QUuid>
 
 AddSingleUI::AddSingleUI(const QString& adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
-    // Labels
     titleLabel = new QLabel("Title:");
     genreLabel = new QLabel("Genre:");
     durationLabel = new QLabel("Duration (mm:ss):");
@@ -21,7 +22,6 @@ AddSingleUI::AddSingleUI(const QString& adminUsername, QWidget *parent)
     coverLabel = new QLabel("Cover image:");
     audioLabel = new QLabel("Audio file:");
 
-    // Inputs
     titleEdit = new QLineEdit;
     titleEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px; padding: 6px;");
     durationEdit = new QLineEdit;
@@ -48,7 +48,6 @@ AddSingleUI::AddSingleUI(const QString& adminUsername, QWidget *parent)
     createSongButton->setStyleSheet("background-color: #1ED760; color: black; font-size: 14pt; border-radius: 24px; font-weight: bold;");
     connect(createSongButton, &QPushButton::clicked, this, &AddSingleUI::onCreateSongClicked);
 
-    // Layouts
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(titleLabel); mainLayout->addWidget(titleEdit);
     mainLayout->addWidget(genreLabel); mainLayout->addWidget(genreCombo);
@@ -88,34 +87,34 @@ void AddSingleUI::onSelectAudioClicked() {
 }
 
 bool AddSingleUI::validateFields() {
-    if (titleEdit->text().trimmed().isEmpty() || durationEdit->text().trimmed().isEmpty() ||
-        descEdit->toPlainText().trimmed().isEmpty() || selectedCoverPath.isEmpty() || selectedAudioPath.isEmpty()) {
-        QMessageBox::warning(this, "Error", "All fields are required.");
-        return false;
-    }
-    // Puedes validar formato duración, etc aquí
-    return true;
+    return !(titleEdit->text().trimmed().isEmpty() ||
+             durationEdit->text().trimmed().isEmpty() ||
+             descEdit->toPlainText().trimmed().isEmpty() ||
+             selectedCoverPath.isEmpty() ||
+             selectedAudioPath.isEmpty());
 }
 
 QString AddSingleUI::copyFileTo(const QString& sourcePath, const QString& destDir) {
     QDir().mkpath(destDir);
     QFileInfo fileInfo(sourcePath);
     QString destPath = destDir + "/" + fileInfo.fileName();
-    QFile::remove(destPath); // Overwrite si existe
+    QFile::remove(destPath);
     QFile::copy(sourcePath, destPath);
     return destPath;
 }
 
 void AddSingleUI::onCreateSongClicked() {
-    if (!validateFields()) return;
+    if (!validateFields()) {
+        QMessageBox::warning(this, "Error", "All fields are required.");
+        return;
+    }
 
+    QString songID = QUuid::createUuid().toString(QUuid::WithoutBraces);
     QString songTitle = titleEdit->text().trimmed();
-    QString safeSongTitle = songTitle;
-    safeSongTitle.replace(QRegularExpression(R"([\[\]\\/:*?"<>|])"), "_");
 
     QString baseDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/";
-    QString globalSongDir = baseDir + "globalsongs/" + safeSongTitle;
-    QString adminSongDir = baseDir + "admindata/" + adminUsername + "/artistsongs/" + safeSongTitle;
+    QString globalSongDir = baseDir + "globalsongs/" + songID;
+    QString adminSongDir = baseDir + "admindata/" + adminUsername + "/artistsongs/" + songID;
 
     QString coverGlobal = copyFileTo(selectedCoverPath, globalSongDir);
     QString audioGlobal = copyFileTo(selectedAudioPath, globalSongDir);
@@ -123,34 +122,34 @@ void AddSingleUI::onCreateSongClicked() {
     QString coverAdmin = copyFileTo(selectedCoverPath, adminSongDir);
     QString audioAdmin = copyFileTo(selectedAudioPath, adminSongDir);
 
-    saveSongData(globalSongDir, songTitle, genreCombo->currentText(), durationEdit->text().trimmed(),
-                 descEdit->toPlainText().trimmed(), coverGlobal, audioGlobal, adminUsername);
+    SongData data(songID,
+                  songTitle,
+                  genreCombo->currentText(),
+                  durationEdit->text().trimmed(),
+                  descEdit->toPlainText().trimmed(),
+                  coverGlobal,
+                  audioGlobal,
+                  adminUsername,
+                  QDateTime::currentDateTime());
 
-    saveSongData(adminSongDir, songTitle, genreCombo->currentText(), durationEdit->text().trimmed(),
-                 descEdit->toPlainText().trimmed(), coverAdmin, audioAdmin, adminUsername);
+    saveSongData(globalSongDir, data);
+    saveSongData(adminSongDir, data);
 
-    // --------- ¡¡AQUÍ CORRIGE!! ---------
-    emit songAdded(songTitle, coverAdmin, adminUsername, audioAdmin);
+    emit songAdded(data);
 
     QMessageBox::information(this, "Success", "Song uploaded successfully!");
     resetForm();
 }
 
-
-void AddSingleUI::saveSongData(const QString& dir, const QString& title, const QString& genre,
-                               const QString& duration, const QString& desc, const QString& coverPath,
-                               const QString& audioPath, const QString& artist) {
-    // Archivo de datos: datosNOMBRE_DE_LA_CANCION.dat
-    QString fileName = "datos" + title;
-    QFile file(dir + "/" + fileName + ".dat");
+void AddSingleUI::saveSongData(const QString& dir, const SongData& data) {
+    QFile file(dir + "/song.dat");
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);
         out.setVersion(QDataStream::Qt_5_15);
-        out << title << genre << duration << desc << coverPath << audioPath << artist << QDateTime::currentDateTime();
+        out << data;
         file.close();
     }
 }
-
 
 void AddSingleUI::resetForm() {
     titleEdit->clear();
@@ -161,3 +160,4 @@ void AddSingleUI::resetForm() {
     selectedCoverPath.clear();
     selectedAudioPath.clear();
 }
+

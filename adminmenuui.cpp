@@ -2,23 +2,15 @@
 #include <QInputDialog>
 #include <QPixmap>
 #include <QFont>
-#include <QPushButton>
 #include <QPainter>
 #include <QPainterPath>
 #include <QScrollArea>
-#include <QHBoxLayout>
-#include <QDialog>
-#include <QLabel>
 #include <QDir>
 #include <QFile>
 #include <QDateTime>
 #include "artistsettingsui.h"
 #include "addsingleui.h"
-#include "songcardwidget.h"
-#include "artistcardwidget.h"
-#include "playbarui.h"
 #include "adminprofileui.h"
-#include <QMenu>
 #include "loginUI.h"
 #include "trendingui.h"
 
@@ -36,7 +28,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     sidebarLayout->setContentsMargins(24, 18, 18, 24);
     sidebarLayout->setSpacing(16);
 
-    // "My Library"
+    // My Library
     QHBoxLayout *libraryBarLayout = new QHBoxLayout;
     QLabel *libraryLabel = new QLabel("My Library");
     QFont libraryFont = libraryLabel->font();
@@ -55,7 +47,6 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     libraryBarLayout->addWidget(libraryLabel);
     libraryBarLayout->addStretch();
     libraryBarLayout->addWidget(addPlaylistButton);
-
     sidebarLayout->addLayout(libraryBarLayout);
 
     // Lista de playlists
@@ -65,24 +56,22 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         "QListWidget::item:selected { background: #282828; color: #1ED760; }"
         );
     sidebarLayout->addWidget(playlistList, 1);
-
     sidebarLayout->addStretch();
 
-    // Botón "Trending"
+    // Botón Trending
     trendingButton = new QPushButton("Trending");
     trendingButton->setStyleSheet(
         "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
         "QPushButton:hover { background-color: #282828; color: #fff; }"
         );
     sidebarLayout->addWidget(trendingButton);
-
     connect(trendingButton, &QPushButton::clicked, this, [this]() {
         TrendingUI *trendWin = new TrendingUI(this);
         trendWin->setAttribute(Qt::WA_DeleteOnClose);
         trendWin->show();
     });
 
-    // Botón "Artist Settings"
+    // Botón Artist Settings
     artistSettingsButton = new QPushButton("Artist Settings");
     artistSettingsButton->setStyleSheet(
         "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
@@ -93,15 +82,12 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
 
     // === PANEL PRINCIPAL ===
     QWidget *mainPanelWidget = new QWidget;
-    mainPanelWidget->setStyleSheet("background: transparent;");
     mainPanelLayout = new QVBoxLayout(mainPanelWidget);
     mainPanelLayout->setContentsMargins(20, 20, 20, 20);
     mainPanelLayout->setSpacing(16);
 
     // Top bar
     topBarLayout = new QHBoxLayout;
-    topBarLayout->setSpacing(16);
-
     homeIconLabel = new QLabel;
     QPixmap homeIconPixmap("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/homeicon.png");
     homeIconLabel->setPixmap(homeIconPixmap.scaled(36, 36, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -115,23 +101,16 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         "QLineEdit { background-color: #222; color: white; border: none; padding: 10px 18px; border-radius: 18px; font-size: 15pt; min-width:300px; }"
         );
     topBarLayout->addWidget(searchBar, 1);
+
     connect(searchBar, &QLineEdit::textChanged, this, [=](const QString &text){
         QString query = text.trimmed().toLower();
-
-        // Filtrar canciones
-        for (auto *card : songCards) {
-            bool match = card->getTitle().toLower().contains(query) ||
-                         card->getArtist().toLower().contains(query);
-            card->setVisible(match || query.isEmpty());
-        }
-
-        // Filtrar artistas
-        for (auto *card : artistCards) {
-            bool match = card->getArtistName().toLower().contains(query);
-            card->setVisible(match || query.isEmpty());
-        }
+        for (auto *card : songCards)
+            card->setVisible(card->getTitle().toLower().contains(query) || card->getArtist().toLower().contains(query) || query.isEmpty());
+        for (auto *card : artistCards)
+            card->setVisible(card->getArtistName().toLower().contains(query) || query.isEmpty());
     });
 
+    // Botón perfil
     profilePicButton = new QPushButton;
     profilePicButton->setFixedSize(48, 48);
     profilePicButton->setCursor(Qt::PointingHandCursor);
@@ -150,15 +129,11 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         path.addEllipse(0, 0, 48, 48);
         painter.setClipPath(path);
         painter.drawPixmap(0, 0, profilePic.scaled(48, 48, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        painter.end();
-
         profilePicButton->setIcon(QIcon(roundedPic));
         profilePicButton->setIconSize(QSize(48, 48));
     }
-
     topBarLayout->addWidget(profilePicButton, 0, Qt::AlignRight);
     connect(profilePicButton, &QPushButton::clicked, this, &AdminMenuUI::onProfilePicClicked);
-
     mainPanelLayout->addLayout(topBarLayout);
 
     // My top songs
@@ -171,9 +146,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
 
     QWidget *cardsWidget = new QWidget;
-    QHBoxLayout *cardsLayout = new QHBoxLayout(cardsWidget);
-    cardsLayout->setContentsMargins(0, 0, 0, 0);
-    cardsLayout->setSpacing(16);
+    cardsLayout = new QHBoxLayout(cardsWidget);
     QScrollArea *cardsScroll = new QScrollArea;
     cardsScroll->setWidget(cardsWidget);
     cardsScroll->setWidgetResizable(true);
@@ -181,9 +154,8 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     cardsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     cardsScroll->setFixedHeight(270);
     mainPanelLayout->addWidget(cardsScroll);
-    this->cardsLayout = cardsLayout;
 
-    // Cargar canciones
+    // Cargar canciones usando hash
     QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
     QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (const QString &songFolder : subdirs) {
@@ -194,66 +166,56 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
             if (f.open(QIODevice::ReadOnly)) {
                 QDataStream in(&f);
                 in.setVersion(QDataStream::Qt_5_15);
-                QString title, genre, duration, desc, coverPath, audioPath, artist;
-                QDateTime created;
-                in >> title >> genre >> duration >> desc >> coverPath >> audioPath >> artist >> created;
+                SongData song;
+                in >> song;
                 f.close();
 
-                SongCardWidget *card = new SongCardWidget(coverPath, title, artist, songDir.absoluteFilePath(audioPath));
+                songHash.insert(song.getId(), song);
+
+                SongCardWidget *card = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
                 cardsLayout->addWidget(card);
                 songCards.append(card);
+
                 connect(card, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
                 connect(card, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
             }
         }
     }
 
-    // Watch out this artists
-    mainPanelLayout->addSpacing(50); // más separación
+    // Artistas
+    mainPanelLayout->addSpacing(50);
     QLabel *topArtistsLabel = new QLabel("Watch out this artists");
     QFont topArtistsFont = topArtistsLabel->font();
     topArtistsFont.setPointSize(22);
     topArtistsFont.setBold(true);
     topArtistsLabel->setFont(topArtistsFont);
-    topArtistsLabel->setStyleSheet("color: white;");
     mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
 
     QWidget *artistCardsWidget = new QWidget;
     QHBoxLayout *artistCardsLayout = new QHBoxLayout(artistCardsWidget);
-    artistCardsLayout->setContentsMargins(10, 10, 10, 10);
-    artistCardsLayout->setSpacing(16);
-
     QScrollArea *artistScroll = new QScrollArea;
     artistScroll->setWidget(artistCardsWidget);
     artistScroll->setWidgetResizable(true);
     artistScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     artistScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     artistScroll->setFixedHeight(300);
-
     mainPanelLayout->addWidget(artistScroll);
 
-    // ---- Cargar admins/artistas ----
     QDir adminDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata");
     QStringList adminFolders = adminDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-
     for (const QString &adminName : adminFolders) {
         QDir artistFolder(adminDir.absoluteFilePath(adminName));
-
         QStringList images = artistFolder.entryList(QStringList() << "*.png" << "*.jpg" << "*.jpeg", QDir::Files);
-        QString profilePicPath = images.isEmpty() ? "" : artistFolder.absoluteFilePath(images.first());
-
-        ArtistCardWidget *artistCard = new ArtistCardWidget(adminName, profilePicPath);
+        QString artistPic = images.isEmpty() ? "" : artistFolder.absoluteFilePath(images.first());
+        ArtistCardWidget *artistCard = new ArtistCardWidget(adminName, artistPic);
         artistCardsLayout->addWidget(artistCard);
-        artistCards.append(artistCard); // 🔹 Guardar referencia
-
+        artistCards.append(artistCard);
         connect(artistCard, &ArtistCardWidget::doubleClicked, this, [=](const QString &name){
-            AdminProfileUI *profileWin = new AdminProfileUI(profilePicPath, name);
+            AdminProfileUI *profileWin = new AdminProfileUI(artistPic, name);
             profileWin->setAttribute(Qt::WA_DeleteOnClose);
             profileWin->show();
         });
     }
-
-    mainPanelLayout->addStretch();
 
     // PlayBar
     playBar = new PlayBarUI;
@@ -262,95 +224,76 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
 
     // Layout principal
     mainLayout = new QHBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
     mainLayout->addWidget(sidebarWidget, 0);
     mainLayout->addWidget(mainPanelWidget, 1);
-
     setLayout(mainLayout);
     setMinimumSize(1050, 620);
     setWindowTitle("Musicfy - Admin Menu");
 }
 
-
-
 AdminMenuUI::~AdminMenuUI() {}
 
-void AdminMenuUI::onAddPlaylistClicked()
-{
+void AdminMenuUI::onAddPlaylistClicked() {
     bool ok;
     QString name = QInputDialog::getText(this, "Nueva Playlist", "Nombre de la playlist:", QLineEdit::Normal, "", &ok);
-    if (ok && !name.trimmed().isEmpty()) {
+    if (ok && !name.trimmed().isEmpty())
         playlistList->addItem(name.trimmed());
-    }
 }
 
-void AdminMenuUI::onArtistSettingsClicked()
-{
+void AdminMenuUI::onArtistSettingsClicked() {
     ArtistSettingsUI *settingsWindow = new ArtistSettingsUI(adminUsername, this);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
     settingsWindow->show();
 
-    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const QString& title, const QString& coverPath, const QString& artist, const QString& audioPath){
-        SongCardWidget *newCard = new SongCardWidget(coverPath, title, artist, audioPath);
+    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const SongData& song){
+        SongCardWidget *newCard = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
         this->cardsLayout->addWidget(newCard);
         songCards.append(newCard);
+        songHash.insert(song.getId(), song);
+
         connect(newCard, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
         connect(newCard, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
     });
+
 }
 
-void AdminMenuUI::onProfilePicClicked()
-{
-    QMenu *menu = new QMenu(this);
 
+void AdminMenuUI::onProfilePicClicked() {
+    QMenu *menu = new QMenu(this);
     QAction *profileAction = new QAction("Ver Perfil", this);
     QAction *signOutAction = new QAction("Sign Out", this);
-
     menu->addAction(profileAction);
     menu->addSeparator();
     menu->addAction(signOutAction);
 
-    // Conecta acciones
     connect(profileAction, &QAction::triggered, this, [this]() {
-        // Crea y muestra el perfil del admin
         AdminProfileUI *profileWindow = new AdminProfileUI(profilePicPath, adminUsername);
-        profileWindow->setAttribute(Qt::WA_DeleteOnClose); // Se destruye al cerrar
+        profileWindow->setAttribute(Qt::WA_DeleteOnClose);
         profileWindow->show();
-        profileWindow->raise();
-        profileWindow->activateWindow();
     });
-
     connect(signOutAction, &QAction::triggered, this, [this]() {
-        // Cierra la ventana principal y muestra el login
         QWidget *login = new LoginUI();
         login->setAttribute(Qt::WA_DeleteOnClose);
         login->show();
         this->window()->close();
     });
 
-    // Muestra el menú debajo del botón
     QPoint pos = profilePicButton->mapToGlobal(QPoint(0, profilePicButton->height()));
     menu->exec(pos);
 }
 
-
-void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected)
-{
+void AdminMenuUI::handleCardToggled(SongCardWidget* card, bool nowSelected) {
     if (nowSelected) {
-        for (SongCardWidget* c : songCards) {
+        for (SongCardWidget* c : songCards)
             if (c != card) c->setSelected(false);
-        }
         currentSelectedCard = card;
     } else {
         if (currentSelectedCard == card) currentSelectedCard = nullptr;
     }
 }
 
-void AdminMenuUI::handlePlayButtonPressed(SongCardWidget* card)
-{
-    // Recoge los datos de la canción y pásalos a la barra
+void AdminMenuUI::handlePlayButtonPressed(SongCardWidget* card) {
     playBar->setSongInfo(card->getCover(), card->getTitle(), card->getArtist(), card->getAudioPath());
     playBar->setVisible(true);
-    playBar->play(); // Este método debe cambiar el ícono y llamar a player->play()
+    playBar->play();
 }

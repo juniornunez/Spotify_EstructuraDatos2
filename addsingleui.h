@@ -7,18 +7,16 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QPushButton>
-#include <QString>
+#include "SongData.h"
 
 class AddSingleUI : public QWidget
 {
     Q_OBJECT
-
 public:
     explicit AddSingleUI(const QString& adminUsername, QWidget *parent = nullptr);
 
 signals:
-    void songAdded(const QString &title, const QString &coverPath, const QString &artist, const QString &audioPath);
-
+    void songAdded(const SongData& data);
 
 private slots:
     void onSelectCoverClicked();
@@ -26,26 +24,31 @@ private slots:
     void onCreateSongClicked();
 
 private:
-    // Datos del admin (para la ruta)
-    QString adminUsername;
-
-    void saveSongData(const QString& dir, const QString& title, const QString& genre,
-                      const QString& duration, const QString& desc, const QString& coverPath,
-                      const QString& audioPath, const QString& artist);
-    // Widgets de formulario
-    QLabel *titleLabel, *genreLabel, *durationLabel, *descLabel, *coverLabel, *audioLabel;
-    QLineEdit *titleEdit, *durationEdit;
-    QComboBox *genreCombo;
-    QTextEdit *descEdit;
-    QLineEdit *coverPathEdit, *audioPathEdit;
-    QPushButton *selectCoverButton, *selectAudioButton, *createSongButton;
-
-    // Archivos seleccionados
-    QString selectedCoverPath, selectedAudioPath;
-
-    void resetForm();
     bool validateFields();
     QString copyFileTo(const QString& sourcePath, const QString& destDir);
+    void saveSongData(const QString& dir, const SongData& data); // ✅ ahora usa SongData
+    void resetForm();
+
+    QString adminUsername;
+    QString selectedCoverPath;
+    QString selectedAudioPath;
+
+    QLabel *titleLabel;
+    QLabel *genreLabel;
+    QLabel *durationLabel;
+    QLabel *descLabel;
+    QLabel *coverLabel;
+    QLabel *audioLabel;
+
+    QLineEdit *titleEdit;
+    QLineEdit *durationEdit;
+    QComboBox *genreCombo;
+    QTextEdit *descEdit;
+    QLineEdit *coverPathEdit;
+    QPushButton *selectCoverButton;
+    QLineEdit *audioPathEdit;
+    QPushButton *selectAudioButton;
+    QPushButton *createSongButton;
 };
 
 #endif // ADDSINGLEUI_H
