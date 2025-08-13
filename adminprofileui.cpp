@@ -135,7 +135,6 @@ void AdminProfileUI::setupMusicAndAlbumsTab()
     albumsTitle->setStyleSheet("color: white; margin-top: 18px;");
     musicAndAlbumsLayout->addWidget(albumsTitle, 0, Qt::AlignLeft);
 
-    // Horizontal scroll for albums (replace with your custom cards later)
     QWidget *albumsContainer = new QWidget;
     QHBoxLayout *albumsLayout = new QHBoxLayout(albumsContainer);
     albumsLayout->setSpacing(16);
@@ -165,7 +164,6 @@ void AdminProfileUI::setupArtistProfileTab()
     artistProfileLayout->setSpacing(22);
     artistProfileLayout->setContentsMargins(40, 20, 40, 20);
 
-    // Profile image big
     profilePicBig = new QLabel;
     profilePicBig->setFixedSize(130, 130);
     profilePicBig->setStyleSheet("border-radius: 65px; background: #232323;");

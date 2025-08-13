@@ -13,9 +13,10 @@
 #include "adminprofileui.h"
 #include "loginUI.h"
 #include "trendingui.h"
+#include "playlistui.h"
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
-    : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath)
+    : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -58,6 +59,14 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     sidebarLayout->addWidget(playlistList, 1);
     sidebarLayout->addStretch();
 
+    // Cargar playlists guardadas
+    loadPlaylists();
+
+    // Evento doble clic para abrir PlaylistUI
+    connect(playlistList, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
+        showPlaylistUI(item->text());
+    });
+
     // Botón Trending
     trendingButton = new QPushButton("Trending");
     trendingButton->setStyleSheet(
@@ -85,16 +94,21 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     mainPanelLayout = new QVBoxLayout(mainPanelWidget);
     mainPanelLayout->setContentsMargins(20, 20, 20, 20);
     mainPanelLayout->setSpacing(16);
-
     // Top bar
     topBarLayout = new QHBoxLayout;
-    homeIconLabel = new QLabel;
-    QPixmap homeIconPixmap("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/homeicon.png");
-    homeIconLabel->setPixmap(homeIconPixmap.scaled(36, 36, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    homeIconLabel->setFixedSize(44, 44);
-    homeIconLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-    topBarLayout->addWidget(homeIconLabel, 0, Qt::AlignLeft);
 
+    // Botón Home
+    homeButton = new QPushButton;
+    homeButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/homeicon.png"));
+    homeButton->setIconSize(QSize(36, 36));
+    homeButton->setFixedSize(44, 44);
+    homeButton->setStyleSheet("QPushButton { background: transparent; border: none; }");
+    topBarLayout->addWidget(homeButton, 0, Qt::AlignLeft);
+
+    // Click en el botón Home para restaurar vista original
+    connect(homeButton, &QPushButton::clicked, this, &AdminMenuUI::restoreMainView);
+
+    // Barra de búsqueda
     searchBar = new QLineEdit;
     searchBar->setPlaceholderText("What do you want to play?");
     searchBar->setStyleSheet(
@@ -136,14 +150,19 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     connect(profilePicButton, &QPushButton::clicked, this, &AdminMenuUI::onProfilePicClicked);
     mainPanelLayout->addLayout(topBarLayout);
 
+    // Guardar contenido original en un widget
+    originalContentWidget = new QWidget;
+    QVBoxLayout *originalLayout = new QVBoxLayout(originalContentWidget);
+    originalLayout->setContentsMargins(0, 0, 0, 0);
+
     // My top songs
     QLabel *topSongsLabel = new QLabel("My top songs");
     QFont topSongsFont = topSongsLabel->font();
     topSongsFont.setPointSize(22);
     topSongsFont.setBold(true);
     topSongsLabel->setFont(topSongsFont);
-    mainPanelLayout->addSpacing(35);
-    mainPanelLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
+    originalLayout->addSpacing(35);
+    originalLayout->addWidget(topSongsLabel, 0, Qt::AlignLeft);
 
     QWidget *cardsWidget = new QWidget;
     cardsLayout = new QHBoxLayout(cardsWidget);
@@ -153,15 +172,16 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     cardsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     cardsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     cardsScroll->setFixedHeight(270);
-    mainPanelLayout->addWidget(cardsScroll);
+    originalLayout->addWidget(cardsScroll);
 
     // Cargar canciones usando hash
     QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
     QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (const QString &songFolder : subdirs) {
         QDir songDir(singlesDir.absoluteFilePath(songFolder));
-        QString datosPath = songDir.absoluteFilePath("datos" + songFolder + ".dat");
-        if (QFile::exists(datosPath)) {
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+        for (const QString &datFile : datFiles) {
+            QString datosPath = songDir.absoluteFilePath(datFile);
             QFile f(datosPath);
             if (f.open(QIODevice::ReadOnly)) {
                 QDataStream in(&f);
@@ -183,13 +203,13 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     }
 
     // Artistas
-    mainPanelLayout->addSpacing(50);
+    originalLayout->addSpacing(50);
     QLabel *topArtistsLabel = new QLabel("Watch out this artists");
     QFont topArtistsFont = topArtistsLabel->font();
     topArtistsFont.setPointSize(22);
     topArtistsFont.setBold(true);
     topArtistsLabel->setFont(topArtistsFont);
-    mainPanelLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
+    originalLayout->addWidget(topArtistsLabel, 0, Qt::AlignLeft);
 
     QWidget *artistCardsWidget = new QWidget;
     QHBoxLayout *artistCardsLayout = new QHBoxLayout(artistCardsWidget);
@@ -199,7 +219,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     artistScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     artistScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     artistScroll->setFixedHeight(300);
-    mainPanelLayout->addWidget(artistScroll);
+    originalLayout->addWidget(artistScroll);
 
     QDir adminDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata");
     QStringList adminFolders = adminDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -220,7 +240,10 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     // PlayBar
     playBar = new PlayBarUI;
     playBar->setVisible(false);
-    mainPanelLayout->addWidget(playBar);
+    originalLayout->addWidget(playBar);
+
+    mainPanelLayout->addWidget(originalContentWidget);
+    currentViewWidget = originalContentWidget;
 
     // Layout principal
     mainLayout = new QHBoxLayout(this);
@@ -233,11 +256,21 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
 
 AdminMenuUI::~AdminMenuUI() {}
 
-void AdminMenuUI::onAddPlaylistClicked() {
-    bool ok;
-    QString name = QInputDialog::getText(this, "Nueva Playlist", "Nombre de la playlist:", QLineEdit::Normal, "", &ok);
-    if (ok && !name.trimmed().isEmpty())
-        playlistList->addItem(name.trimmed());
+void AdminMenuUI::showPlaylistUI(const QString &playlistName) {
+    if (currentViewWidget != nullptr) {
+        currentViewWidget->setParent(nullptr);
+    }
+    PlaylistUI *playlistWin = new PlaylistUI(playlistName);
+    mainPanelLayout->addWidget(playlistWin);
+    currentViewWidget = playlistWin;
+}
+
+void AdminMenuUI::restoreMainView() {
+    if (currentViewWidget != nullptr) {
+        currentViewWidget->setParent(nullptr);
+    }
+    mainPanelLayout->addWidget(originalContentWidget);
+    currentViewWidget = originalContentWidget;
 }
 
 void AdminMenuUI::onArtistSettingsClicked() {
@@ -254,9 +287,7 @@ void AdminMenuUI::onArtistSettingsClicked() {
         connect(newCard, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
         connect(newCard, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
     });
-
 }
-
 
 void AdminMenuUI::onProfilePicClicked() {
     QMenu *menu = new QMenu(this);
@@ -297,3 +328,31 @@ void AdminMenuUI::handlePlayButtonPressed(SongCardWidget* card) {
     playBar->setVisible(true);
     playBar->play();
 }
+
+void AdminMenuUI::loadPlaylists() {
+    QDir playlistsDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1").arg(adminUsername));
+    if (!playlistsDir.exists()) return;
+
+    QStringList playlistFolders = playlistsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &playlistName : playlistFolders) {
+        playlistList->addItem(playlistName);
+    }
+}
+
+void AdminMenuUI::onAddPlaylistClicked() {
+    bool ok;
+    QString name = QInputDialog::getText(this, "Nueva Playlist", "Nombre de la playlist:", QLineEdit::Normal, "", &ok);
+    if (ok && !name.trimmed().isEmpty()) {
+        playlistList->addItem(name.trimmed());
+
+        QDir userPlaylistsDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1").arg(adminUsername));
+        if (!userPlaylistsDir.exists()) {
+            QDir().mkpath(userPlaylistsDir.absolutePath());
+        }
+
+        QDir().mkpath(userPlaylistsDir.filePath(name.trimmed()));
+    }
+}
+
+
+

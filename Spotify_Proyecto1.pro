@@ -13,6 +13,7 @@ SOURCES += \
     main.cpp \
     loginUI.cpp \
     playbarui.cpp \
+    playlistui.cpp \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
@@ -32,6 +33,7 @@ HEADERS += \
     artistsettingsui.h \
     loginUI.h \
     playbarui.h \
+    playlistui.h \
     questionui.h \
     registeradminui.h \
     registerui.h \
