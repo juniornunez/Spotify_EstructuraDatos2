@@ -4,6 +4,7 @@ QT += multimedia
 CONFIG += c++17
 
 SOURCES += \
+    addplaylistsongs.cpp \
     addsingleui.cpp \
     admindata.cpp \
     adminmenuui.cpp \
@@ -25,6 +26,7 @@ SOURCES += \
     userprofileui.cpp
 
 HEADERS += \
+    addplaylistsongs.h \
     addsingleui.h \
     admindata.h \
     adminmenuui.h \

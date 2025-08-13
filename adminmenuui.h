@@ -21,7 +21,7 @@ class AdminMenuUI : public QWidget
     Q_OBJECT
 public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
-    ~AdminMenuUI();
+
 
 private slots:
     void onArtistSettingsClicked();

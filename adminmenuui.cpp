@@ -190,6 +190,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
                 in >> song;
                 f.close();
 
+                song.setFilePath(datosPath);
                 songHash.insert(song.getId(), song);
 
                 SongCardWidget *card = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
@@ -254,16 +255,17 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     setWindowTitle("Musicfy - Admin Menu");
 }
 
-AdminMenuUI::~AdminMenuUI() {}
-
 void AdminMenuUI::showPlaylistUI(const QString &playlistName) {
     if (currentViewWidget != nullptr) {
         currentViewWidget->setParent(nullptr);
     }
-    PlaylistUI *playlistWin = new PlaylistUI(playlistName);
+    PlaylistUI *playlistWin = new PlaylistUI(playlistName, adminUsername); // pasa el username
     mainPanelLayout->addWidget(playlistWin);
     currentViewWidget = playlistWin;
 }
+
+
+
 
 void AdminMenuUI::restoreMainView() {
     if (currentViewWidget != nullptr) {

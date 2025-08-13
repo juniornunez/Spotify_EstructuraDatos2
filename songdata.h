@@ -19,7 +19,7 @@ public:
              const QString &artist,
              const QDateTime &created);
 
-    // Getters
+    // Métodos getter
     QString getId() const { return id; }
     QString getTitle() const { return title; }
     QString getGenre() const { return genre; }
@@ -30,18 +30,13 @@ public:
     QString getArtist() const { return artist; }
     QDateTime getCreated() const { return created; }
 
-    // Setters
-    void setId(const QString &newId) { id = newId; }
-    void setTitle(const QString &newTitle) { title = newTitle; }
-    void setGenre(const QString &newGenre) { genre = newGenre; }
-    void setDuration(const QString &newDuration) { duration = newDuration; }
-    void setDescription(const QString &newDescription) { description = newDescription; }
-    void setCoverPath(const QString &newCoverPath) { coverPath = newCoverPath; }
-    void setAudioPath(const QString &newAudioPath) { audioPath = newAudioPath; }
-    void setArtist(const QString &newArtist) { artist = newArtist; }
-    void setCreated(const QDateTime &newCreated) { created = newCreated; }
+    // Nuevo getter para la ruta completa del archivo .dat
+    QString getFilePath() const { return filePath; }
 
-    // Operadores para serialización
+    // Setter para filePath (lo usaremos al cargar canciones)
+    void setFilePath(const QString &path) { filePath = path; }
+
+    // Serialización
     friend QDataStream& operator<<(QDataStream &out, const SongData &data);
     friend QDataStream& operator>>(QDataStream &in, SongData &data);
 
@@ -55,6 +50,9 @@ private:
     QString audioPath;
     QString artist;
     QDateTime created;
+
+    // Nuevo campo para guardar la ruta del archivo
+    QString filePath;
 };
 
 #endif // SONGDATA_H

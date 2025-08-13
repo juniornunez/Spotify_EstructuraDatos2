@@ -1,11 +1,9 @@
 #include "playlistui.h"
+#include "addplaylistsongs.h"
 #include <QFont>
-#include <QPixmap>
-#include <QPainter>
-#include <QPainterPath>
 
-PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
-    : QWidget(parent), playlistName(playlistName)
+PlaylistUI::PlaylistUI(const QString &playlistName, const QString &username, QWidget *parent)
+    : QWidget(parent), playlistName(playlistName), username(username)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -16,7 +14,6 @@ PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
     // Cabecera
     QHBoxLayout *headerLayout = new QHBoxLayout;
 
-    // Imagen de portada de la playlist
     coverLabel = new QLabel;
     coverLabel->setFixedSize(150, 150);
     coverLabel->setStyleSheet("background-color: #333; border-radius: 8px;");
@@ -24,7 +21,6 @@ PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
     coverLabel->setText("Cover");
     headerLayout->addWidget(coverLabel);
 
-    // Info de playlist
     QVBoxLayout *infoLayout = new QVBoxLayout;
     QLabel *playlistType = new QLabel("Public Playlist");
     playlistType->setStyleSheet("color: #bbb; font-size: 10pt;");
@@ -56,6 +52,13 @@ PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
         );
     buttonLayout->addWidget(addSongButton);
 
+    // 🔹 Conectar botón "+" a ventana de agregar canciones
+    connect(addSongButton, &QPushButton::clicked, this, [=]() {
+        AddPlaylistSongs *addWindow = new AddPlaylistSongs(username, playlistName, this);
+        addWindow->setAttribute(Qt::WA_DeleteOnClose);
+        addWindow->show();
+    });
+
     infoLayout->addLayout(buttonLayout);
     headerLayout->addLayout(infoLayout);
     headerLayout->addStretch();
@@ -70,7 +73,6 @@ PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
     songsLayout->setContentsMargins(0, 0, 0, 0);
     songsLayout->setSpacing(8);
 
-    // Por ahora no se cargan canciones, solo placeholder
     QLabel *placeholder = new QLabel("No songs yet");
     placeholder->setStyleSheet("color: #aaa; font-size: 12pt;");
     songsLayout->addWidget(placeholder);
@@ -78,3 +80,5 @@ PlaylistUI::PlaylistUI(const QString &playlistName, QWidget *parent)
     scroll->setWidget(songsWidget);
     mainLayout->addWidget(scroll, 1);
 }
+
+

@@ -12,15 +12,17 @@ class PlaylistUI : public QWidget
 {
     Q_OBJECT
 public:
-    explicit PlaylistUI(const QString &playlistName, QWidget *parent = nullptr);
+    explicit PlaylistUI(const QString &playlistName, const QString &username, QWidget *parent = nullptr);
 
 private:
     QString playlistName;
+    QString username;
+
+    QVBoxLayout *mainLayout;
     QLabel *coverLabel;
     QLabel *titleLabel;
     QPushButton *playButton;
     QPushButton *addSongButton;
-    QVBoxLayout *mainLayout;
 };
 
 #endif // PLAYLISTUI_H
