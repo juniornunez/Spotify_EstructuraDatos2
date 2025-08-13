@@ -15,7 +15,7 @@ public:
     explicit AddPlaylistSongs(const QString &username, const QString &playlistName, QWidget *parent = nullptr);
 
 private slots:
-    void onAddSongClicked(const SongData &song);
+    void onAddSongClicked(const SongData &song, const QString &sourceDatPath);
 
 private:
     QString username;

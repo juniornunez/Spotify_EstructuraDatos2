@@ -1,6 +1,13 @@
 #include "playlistui.h"
 #include "addplaylistsongs.h"
 #include <QFont>
+#include <QDir>
+#include <QFile>
+#include <QDataStream>
+#include <QPixmap>
+#include <QFileInfo>
+#include <QMouseEvent>
+#include "SongData.h"
 
 PlaylistUI::PlaylistUI(const QString &playlistName, const QString &username, QWidget *parent)
     : QWidget(parent), playlistName(playlistName), username(username)
@@ -52,7 +59,6 @@ PlaylistUI::PlaylistUI(const QString &playlistName, const QString &username, QWi
         );
     buttonLayout->addWidget(addSongButton);
 
-    // 🔹 Conectar botón "+" a ventana de agregar canciones
     connect(addSongButton, &QPushButton::clicked, this, [=]() {
         AddPlaylistSongs *addWindow = new AddPlaylistSongs(username, playlistName, this);
         addWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -71,14 +77,93 @@ PlaylistUI::PlaylistUI(const QString &playlistName, const QString &username, QWi
     QWidget *songsWidget = new QWidget;
     QVBoxLayout *songsLayout = new QVBoxLayout(songsWidget);
     songsLayout->setContentsMargins(0, 0, 0, 0);
-    songsLayout->setSpacing(8);
+    songsLayout->setSpacing(0);
 
-    QLabel *placeholder = new QLabel("No songs yet");
-    placeholder->setStyleSheet("color: #aaa; font-size: 12pt;");
-    songsLayout->addWidget(placeholder);
+    QString playlistPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/%2")
+                               .arg(username, playlistName);
+    QDir playlistDir(playlistPath);
+
+    if (playlistDir.exists()) {
+        QStringList songFolders = playlistDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        if (!songFolders.isEmpty()) {
+            int index = 1;
+            for (const QString &songId : songFolders) {
+                QDir songDir(playlistDir.filePath(songId));
+                QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+                if (!datFiles.isEmpty()) {
+                    QFile f(songDir.filePath(datFiles.first()));
+                    if (f.open(QIODevice::ReadOnly)) {
+                        QDataStream in(&f);
+                        in.setVersion(QDataStream::Qt_5_15);
+                        SongData song;
+                        in >> song;
+                        f.close();
+
+                        QWidget *songRow = new QWidget;
+                        QHBoxLayout *rowLayout = new QHBoxLayout(songRow);
+                        rowLayout->setContentsMargins(10, 5, 10, 5);
+                        rowLayout->setSpacing(10);
+
+                        QLabel *indexLabel = new QLabel(QString::number(index++));
+                        indexLabel->setStyleSheet("color: #aaa; font-size: 10pt;");
+                        indexLabel->setFixedWidth(20);
+                        rowLayout->addWidget(indexLabel);
+
+                        QLabel *cover = new QLabel;
+                        cover->setFixedSize(40, 40);
+                        QPixmap pix(song.getCoverPath());
+                        if (!pix.isNull()) {
+                            cover->setPixmap(pix.scaled(40, 40, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+                        } else {
+                            cover->setStyleSheet("background-color: #333;");
+                        }
+                        rowLayout->addWidget(cover);
+
+                        QVBoxLayout *textLayout = new QVBoxLayout;
+                        QLabel *titleLbl = new QLabel(song.getTitle());
+                        titleLbl->setStyleSheet("font-weight: bold; font-size: 10pt; color: white;");
+                        QLabel *artistLbl = new QLabel(song.getArtist());
+                        artistLbl->setStyleSheet("color: #bbb; font-size: 9pt;");
+                        textLayout->addWidget(titleLbl);
+                        textLayout->addWidget(artistLbl);
+                        rowLayout->addLayout(textLayout);
+
+                        songRow->setLayout(rowLayout);
+
+                        // 🎵 Reproducir al doble click
+                        songRow->installEventFilter(this);
+                        songRow->setProperty("audioPath", song.getAudioPath());
+
+                        songsLayout->addWidget(songRow);
+
+                        // Separador visual
+                        QFrame *separator = new QFrame;
+                        separator->setFrameShape(QFrame::HLine);
+                        separator->setFrameShadow(QFrame::Sunken);
+                        separator->setStyleSheet("color: #333;");
+                        songsLayout->addWidget(separator);
+                    }
+                }
+            }
+        } else {
+            QLabel *placeholder = new QLabel("No songs yet");
+            placeholder->setStyleSheet("color: #aaa; font-size: 12pt;");
+            songsLayout->addWidget(placeholder);
+        }
+    }
 
     scroll->setWidget(songsWidget);
     mainLayout->addWidget(scroll, 1);
 }
 
-
+// Captura doble click
+bool PlaylistUI::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::MouseButtonDblClick) {
+        QString path = obj->property("audioPath").toString();
+        if (!path.isEmpty()) {
+            emit playSong(path); // 🔹 Señal que debe estar conectada al PlayBarUI
+        }
+        return true;
+    }
+    return QWidget::eventFilter(obj, event);
+}

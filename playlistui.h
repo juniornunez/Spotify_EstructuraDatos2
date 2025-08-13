@@ -3,16 +3,21 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
 #include <QPushButton>
+#include <QLabel>
 #include <QScrollArea>
+#include <QEvent>
 
-class PlaylistUI : public QWidget
-{
+class PlaylistUI : public QWidget {
     Q_OBJECT
 public:
     explicit PlaylistUI(const QString &playlistName, const QString &username, QWidget *parent = nullptr);
+
+signals:
+    void playSong(const QString &audioPath); // 🔹 Señal para reproducir en PlayBarUI
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     QString playlistName;

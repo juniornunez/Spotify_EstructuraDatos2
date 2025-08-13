@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QMessageBox>
+#include <QFileInfo>
 
 AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playlistName, QWidget *parent)
     : QDialog(parent), username(username), playlistName(playlistName)
@@ -32,7 +33,8 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
         QDir songDir(songsDir.absoluteFilePath(songFolder));
         QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
         for (const QString &datFile : datFiles) {
-            QFile f(songDir.absoluteFilePath(datFile));
+            QString datPath = songDir.absoluteFilePath(datFile); // Ruta real del .dat
+            QFile f(datPath);
             if (f.open(QIODevice::ReadOnly)) {
                 QDataStream in(&f);
                 in.setVersion(QDataStream::Qt_5_15);
@@ -56,7 +58,7 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
                 rowLayout->addWidget(addBtn);
 
                 connect(addBtn, &QPushButton::clicked, this, [=]() {
-                    onAddSongClicked(song);
+                    onAddSongClicked(song, datPath); // Pasamos también la ruta del .dat
                 });
 
                 songsLayout->addWidget(songRow);
@@ -69,22 +71,40 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
     mainLayout->addWidget(scroll);
 }
 
-void AddPlaylistSongs::onAddSongClicked(const SongData &song) {
-    QDir playlistDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1/%2")
-                         .arg(username, playlistName));
-    if (!playlistDir.exists()) {
-        QDir().mkpath(playlistDir.absolutePath());
-    }
+void AddPlaylistSongs::onAddSongClicked(const SongData &song, const QString &sourceDatPath) {
+    QString playlistDirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/%2")
+    .arg(username, playlistName);
 
-    QString destPath = playlistDir.filePath(song.getId() + ".dat");
-    if (QFile::exists(destPath)) {
+    // Crear carpeta de playlist si no existe
+    QDir().mkpath(playlistDirPath);
+
+    // Crear carpeta para esta canción dentro de la playlist
+    QString songFolderPath = playlistDirPath + "/" + song.getId();
+    QDir().mkpath(songFolderPath);
+
+    // Ruta destino para el .dat
+    QString destDatPath = songFolderPath + "/" + QFileInfo(sourceDatPath).fileName();
+
+    if (QFile::exists(destDatPath)) {
         QMessageBox::information(this, "Already Added", "This song is already in the playlist.");
         return;
     }
 
-    if (QFile::copy(song.getFilePath(), destPath)) {
-        QMessageBox::information(this, "Added", "Song added to playlist!");
-    } else {
+    // Copiar archivo .dat
+    if (!QFile::copy(sourceDatPath, destDatPath)) {
         QMessageBox::warning(this, "Error", "Failed to add song.");
+        return;
     }
+
+    // Copiar cover
+    if (QFile::exists(song.getCoverPath())) {
+        QFile::copy(song.getCoverPath(), songFolderPath + "/" + QFileInfo(song.getCoverPath()).fileName());
+    }
+
+    // Copiar archivo de audio
+    if (QFile::exists(song.getAudioPath())) {
+        QFile::copy(song.getAudioPath(), songFolderPath + "/" + QFileInfo(song.getAudioPath()).fileName());
+    }
+
+    QMessageBox::information(this, "Added", "Song added to playlist!");
 }
