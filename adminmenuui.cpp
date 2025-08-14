@@ -14,7 +14,7 @@
 #include "loginUI.h"
 #include "trendingui.h"
 #include "playlistui.h"
-
+#include "managesongsui.h"
                                                       AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
 {
@@ -275,25 +275,67 @@ void AdminMenuUI::restoreMainView() {
     if (currentViewWidget != nullptr) {
         currentViewWidget->setParent(nullptr);
     }
+
+    // Limpiar las canciones actuales
+    QLayoutItem *item;
+    while ((item = cardsLayout->takeAt(0)) != nullptr) {
+        delete item->widget();
+        delete item;
+    }
+    songCards.clear();
+    songHash.clear();
+
+    // Recargar canciones
+    QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
+    QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &songFolder : subdirs) {
+        QDir songDir(singlesDir.absoluteFilePath(songFolder));
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+        for (const QString &datFile : datFiles) {
+            QString datosPath = songDir.absoluteFilePath(datFile);
+            QFile f(datosPath);
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f);
+                in.setVersion(QDataStream::Qt_5_15);
+                SongData song;
+                in >> song;
+                f.close();
+
+                song.setFilePath(datosPath);
+                songHash.insert(song.getId(), song);
+
+                SongCardWidget *card = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
+                cardsLayout->addWidget(card);
+                songCards.append(card);
+
+                connect(card, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
+                connect(card, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
+            }
+        }
+    }
+
+    // Volver a mostrar el contenido original
     mainPanelLayout->addWidget(originalContentWidget);
     currentViewWidget = originalContentWidget;
 }
 
+
 void AdminMenuUI::onArtistSettingsClicked() {
     ArtistSettingsUI *settingsWindow = new ArtistSettingsUI(adminUsername, this);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
-    settingsWindow->show();
 
-    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [=](const SongData& song){
-        SongCardWidget *newCard = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
-        this->cardsLayout->addWidget(newCard);
-        songCards.append(newCard);
-        songHash.insert(song.getId(), song);
-
-        connect(newCard, &SongCardWidget::toggled, this, &AdminMenuUI::handleCardToggled);
-        connect(newCard, &SongCardWidget::playPressed, this, &AdminMenuUI::handlePlayButtonPressed);
+    connect(settingsWindow, &ArtistSettingsUI::manageSongsRequested, this, [this]() {
+        if (currentViewWidget != nullptr) {
+            currentViewWidget->setParent(nullptr);
+        }
+        ManageSongsUI *manageUI = new ManageSongsUI(adminUsername);
+        mainPanelLayout->addWidget(manageUI);
+        currentViewWidget = manageUI;
     });
+
+    settingsWindow->show();
 }
+
 
 void AdminMenuUI::onProfilePicClicked() {
     QMenu *menu = new QMenu(this);

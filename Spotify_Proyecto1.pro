@@ -14,7 +14,6 @@ SOURCES += \
     horizontalsongcard.cpp \
     main.cpp \
     loginUI.cpp \
-    managesongsui.cpp \
     playbarui.cpp \
     playlistui.cpp \
     questionui.cpp \

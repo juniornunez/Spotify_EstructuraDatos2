@@ -15,7 +15,7 @@ public:
 
 signals:
     void songUploaded(const SongData &song); // ✅ Ahora manda SongData entero
-
+    void manageSongsRequested();
 private slots:
     void uploadAlbumClicked();
     void uploadEPClicked();

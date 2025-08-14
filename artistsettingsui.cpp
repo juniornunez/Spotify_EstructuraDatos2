@@ -33,6 +33,8 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         "}"
         );
 
+
+
     // ✅ Conexión para abrir AddSingleUI y devolver SongData
     connect(singleButton, &QPushButton::clicked, this, [=]() {
         AddSingleUI *addSingle = new AddSingleUI(adminUsername);
@@ -79,7 +81,10 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         "color: #1DB954;"
         "}"
         );
-    connect(manageMusicButton, &QPushButton::clicked, this, &ArtistSettingsUI::manageMusicClicked);
+    connect(manageMusicButton, &QPushButton::clicked, this, [=]() {
+        emit manageSongsRequested();
+        this->close(); // cerrar el pop-up
+    });
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addStretch();
