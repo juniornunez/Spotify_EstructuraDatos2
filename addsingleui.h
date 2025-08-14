@@ -26,7 +26,7 @@ private slots:
 private:
     bool validateFields();
     QString copyFileTo(const QString& sourcePath, const QString& destDir);
-    void saveSongData(const QString& dir, const SongData& data); // ✅ ahora usa SongData
+    void saveSongData(const QString& dir, const SongData& data);
     void resetForm();
 
     QString adminUsername;
@@ -52,3 +52,4 @@ private:
 };
 
 #endif // ADDSINGLEUI_H
+

@@ -1,6 +1,7 @@
-#include "SongData.h"
+#include "songdata.h"
 
 SongData::SongData()
+    : trackNumber(-1) // default: no es parte de álbum
 {
 }
 
@@ -12,7 +13,9 @@ SongData::SongData(const QString &id,
                    const QString &coverPath,
                    const QString &audioPath,
                    const QString &artist,
-                   const QDateTime &created)
+                   const QDateTime &created,
+                   const QString &albumName,
+                   int trackNumber)
     : id(id),
     title(title),
     genre(genre),
@@ -21,7 +24,9 @@ SongData::SongData(const QString &id,
     coverPath(coverPath),
     audioPath(audioPath),
     artist(artist),
-    created(created)
+    created(created),
+    albumName(albumName),
+    trackNumber(trackNumber)
 {
 }
 
@@ -35,7 +40,9 @@ QDataStream& operator<<(QDataStream &out, const SongData &data)
         << data.coverPath
         << data.audioPath
         << data.artist
-        << data.created;
+        << data.created
+        << data.albumName
+        << data.trackNumber;
     return out;
 }
 
@@ -50,5 +57,19 @@ QDataStream& operator>>(QDataStream &in, SongData &data)
         >> data.audioPath
         >> data.artist
         >> data.created;
+
+    // Lectura segura: si el archivo no tiene álbum/trackNumber (viejos .dat), dejar valores por defecto
+    if (!in.atEnd()) {
+        in >> data.albumName;
+    } else {
+        data.albumName = "";
+    }
+
+    if (!in.atEnd()) {
+        in >> data.trackNumber;
+    } else {
+        data.trackNumber = -1;
+    }
+
     return in;
 }

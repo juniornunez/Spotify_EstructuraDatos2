@@ -21,7 +21,7 @@ class AdminMenuUI : public QWidget
     Q_OBJECT
 public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
-
+    void restoreMainView();
 
 private slots:
     void onArtistSettingsClicked();
@@ -31,8 +31,9 @@ private slots:
     void loadPlaylists();
     void onAddPlaylistClicked();
     void showPlaylistUI(const QString &playlistName);
-    void restoreMainView();
+
     void showAdminProfileUI();
+
 private:
     QString adminUsername;
     QString profilePicPath;

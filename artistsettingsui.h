@@ -16,6 +16,7 @@ public:
 signals:
     void songUploaded(const SongData &song); // ✅ Ahora manda SongData entero
     void manageSongsRequested();
+    void albumUploaded(const QList<SongData> &songs);
 private slots:
     void uploadAlbumClicked();
     void uploadEPClicked();

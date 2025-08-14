@@ -17,9 +17,11 @@ public:
              const QString &coverPath,
              const QString &audioPath,
              const QString &artist,
-             const QDateTime &created);
+             const QDateTime &created,
+             const QString &albumName = "",
+             int trackNumber = -1);
 
-    // Métodos getter existentes
+    // Getters
     QString getId() const { return id; }
     QString getTitle() const { return title; }
     QString getGenre() const { return genre; }
@@ -29,16 +31,12 @@ public:
     QString getAudioPath() const { return audioPath; }
     QString getArtist() const { return artist; }
     QDateTime getCreated() const { return created; }
+    QString getAlbumName() const { return albumName; }
+    int getTrackNumber() const { return trackNumber; }
 
-    // Nuevo getter para la ruta completa del archivo .dat
+    // Setter para filePath (ruta .dat)
     QString getFilePath() const { return filePath; }
-
-    // Setter para filePath
     void setFilePath(const QString &path) { filePath = path; }
-
-    // --- NUEVOS GETTERS ÚTILES ---
-    QString getDurationString() const { return duration; } // Alias para duración
-    QString getPlayCount() const { return playCount; }     // Para futura estadística
 
     // Serialización
     friend QDataStream& operator<<(QDataStream &out, const SongData &data);
@@ -55,11 +53,10 @@ private:
     QString artist;
     QDateTime created;
 
-    // Nuevo campo para guardar la ruta del archivo
-    QString filePath;
+    QString albumName;   // NUEVO: nombre del álbum (vacío si es single)
+    int trackNumber;     // NUEVO: número de pista (solo si pertenece a un álbum)
 
-    // Campo opcional para reproducidas (a futuro)
-    QString playCount;
+    QString filePath;    // Ruta del archivo .dat
 };
 
 #endif // SONGDATA_H

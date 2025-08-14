@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QFont>
 #include "addsingleui.h"
+#include "addalbumui.h"  // ✅ Importar nueva clase
 
 ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent)
     : QDialog(parent), adminUsername(adminUsername)
@@ -33,9 +34,7 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         "}"
         );
 
-
-
-    // ✅ Conexión para abrir AddSingleUI y devolver SongData
+    // ✅ Subir Single
     connect(singleButton, &QPushButton::clicked, this, [=]() {
         AddSingleUI *addSingle = new AddSingleUI(adminUsername);
         QDialog *dialog = new QDialog(this);
@@ -46,9 +45,8 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         QVBoxLayout *dlgLayout = new QVBoxLayout(dialog);
         dlgLayout->addWidget(addSingle);
 
-        // Cuando se añade la canción, cerramos y emitimos SongData completo
         connect(addSingle, &AddSingleUI::songAdded, this, [=](const SongData &song) {
-            emit songUploaded(song); // ✅ Enviamos SongData completo
+            emit songUploaded(song);
             dialog->accept();
             dialog->deleteLater();
         });
@@ -58,7 +56,26 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
 
     albumButton = new QPushButton("Subir Álbum");
     albumButton->setStyleSheet(singleButton->styleSheet());
-    connect(albumButton, &QPushButton::clicked, this, &ArtistSettingsUI::uploadAlbumClicked);
+
+    // ✅ Subir Álbum
+    connect(albumButton, &QPushButton::clicked, this, [=]() {
+        AddAlbumUI *addAlbum = new AddAlbumUI(adminUsername);
+        QDialog *dialog = new QDialog(this);
+        dialog->setWindowTitle("Subir Álbum");
+        dialog->setModal(true);
+        dialog->setStyleSheet("background-color: #191414;");
+
+        QVBoxLayout *dlgLayout = new QVBoxLayout(dialog);
+        dlgLayout->addWidget(addAlbum);
+
+        connect(addAlbum, &AddAlbumUI::albumAdded, this, [=](const QList<SongData> &songs) {
+            emit albumUploaded(songs); // ✅ Nueva señal para álbumes
+            dialog->accept();
+            dialog->deleteLater();
+        });
+
+        dialog->exec();
+    });
 
     epButton = new QPushButton("Subir EP");
     epButton->setStyleSheet(singleButton->styleSheet());
@@ -83,7 +100,7 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
         );
     connect(manageMusicButton, &QPushButton::clicked, this, [=]() {
         emit manageSongsRequested();
-        this->close(); // cerrar el pop-up
+        this->close();
     });
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -105,7 +122,7 @@ ArtistSettingsUI::ArtistSettingsUI(const QString &adminUsername, QWidget *parent
 ArtistSettingsUI::~ArtistSettingsUI() {}
 
 void ArtistSettingsUI::uploadAlbumClicked() {
-    // TODO: lógica para subir álbum
+    // ya lo movimos al connect directo arriba
 }
 
 void ArtistSettingsUI::uploadEPClicked() {
@@ -113,5 +130,5 @@ void ArtistSettingsUI::uploadEPClicked() {
 }
 
 void ArtistSettingsUI::manageMusicClicked() {
-    // TODO: lógica para gestionar música
+    // ya lo hace con connect
 }

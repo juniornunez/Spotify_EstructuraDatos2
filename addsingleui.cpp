@@ -24,21 +24,26 @@ AddSingleUI::AddSingleUI(const QString& adminUsername, QWidget *parent)
 
     titleEdit = new QLineEdit;
     titleEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px; padding: 6px;");
+
     durationEdit = new QLineEdit;
     durationEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px; padding: 6px;");
+
     genreCombo = new QComboBox;
     genreCombo->addItems({"Pop","Corridos","Cristianos","Electrónica","Reguetón","Rock","Clásicas"});
     genreCombo->setStyleSheet("background: #222; color: white; border-radius: 5px; padding: 6px;");
+
     descEdit = new QTextEdit;
     descEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px;");
 
-    coverPathEdit = new QLineEdit; coverPathEdit->setReadOnly(true);
+    coverPathEdit = new QLineEdit;
+    coverPathEdit->setReadOnly(true);
     coverPathEdit->setStyleSheet("background: #222; color: #bbb; border-radius: 5px;");
     selectCoverButton = new QPushButton("Select image");
     selectCoverButton->setStyleSheet("background: #222; color: #1ED760; border-radius: 8px; font-weight: bold;");
     connect(selectCoverButton, &QPushButton::clicked, this, &AddSingleUI::onSelectCoverClicked);
 
-    audioPathEdit = new QLineEdit; audioPathEdit->setReadOnly(true);
+    audioPathEdit = new QLineEdit;
+    audioPathEdit->setReadOnly(true);
     audioPathEdit->setStyleSheet("background: #222; color: #bbb; border-radius: 5px;");
     selectAudioButton = new QPushButton("Select audio");
     selectAudioButton->setStyleSheet("background: #222; color: #1ED760; border-radius: 8px; font-weight: bold;");
@@ -119,8 +124,8 @@ void AddSingleUI::onCreateSongClicked() {
     QString coverGlobal = copyFileTo(selectedCoverPath, globalSongDir);
     QString audioGlobal = copyFileTo(selectedAudioPath, globalSongDir);
 
-    QString coverAdmin = copyFileTo(selectedCoverPath, adminSongDir);
-    QString audioAdmin = copyFileTo(selectedAudioPath, adminSongDir);
+    copyFileTo(selectedCoverPath, adminSongDir);
+    copyFileTo(selectedAudioPath, adminSongDir);
 
     SongData data(songID,
                   songTitle,
@@ -130,7 +135,9 @@ void AddSingleUI::onCreateSongClicked() {
                   coverGlobal,
                   audioGlobal,
                   adminUsername,
-                  QDateTime::currentDateTime());
+                  QDateTime::currentDateTime(),
+                  "",   // No album (single)
+                  -1);  // No track number
 
     saveSongData(globalSongDir, data);
     saveSongData(adminSongDir, data);
