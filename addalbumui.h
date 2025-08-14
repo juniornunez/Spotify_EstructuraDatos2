@@ -2,26 +2,27 @@
 #define ADDALBUMUI_H
 
 #include <QWidget>
-#include <QTabWidget>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTabWidget>
 #include <QComboBox>
 #include <QTextEdit>
-#include <QLabel>
-#include "SongData.h"
+#include "songdata.h"
 
 class AddAlbumUI : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit AddAlbumUI(const QString& adminUsername, QWidget *parent = nullptr);
 
 signals:
+    void songAdded(const SongData& song);
     void albumAdded(const QList<SongData>& songs);
-    void songAdded(const SongData &data);
+
 private slots:
     void onContinueClicked();
-    void onSelectCoverClicked(QWidget *tab);
+    void onSelectAlbumCoverClicked();
     void onSelectAudioClicked(QWidget *tab);
     void onCreateAlbumClicked();
 
@@ -33,16 +34,15 @@ private:
 
     QString adminUsername;
     QString albumName;
+    QString albumCoverPath;  // Carátula única del álbum
     int songCount;
 
-    // Paso inicial
     QLineEdit *albumNameEdit;
     QLineEdit *songCountEdit;
+    QLineEdit *albumCoverPathEdit;
     QPushButton *continueButton;
-
-    // Pestañas
-    QTabWidget *tabWidget;
     QPushButton *uploadAlbumButton;
+    QTabWidget *tabWidget;
 };
 
 #endif // ADDALBUMUI_H
