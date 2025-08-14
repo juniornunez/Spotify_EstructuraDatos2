@@ -11,8 +11,10 @@ SOURCES += \
     adminprofileui.cpp \
     artistcardwidget.cpp \
     artistsettingsui.cpp \
+    horizontalsongcard.cpp \
     main.cpp \
     loginUI.cpp \
+    managesongsui.cpp \
     playbarui.cpp \
     playlistui.cpp \
     questionui.cpp \
@@ -33,7 +35,9 @@ HEADERS += \
     adminprofileui.h \
     artistcardwidget.h \
     artistsettingsui.h \
+    horizontalsongcard.h \
     loginUI.h \
+    managesongsui.h \
     playbarui.h \
     playlistui.h \
     questionui.h \

@@ -15,7 +15,7 @@
 #include "trendingui.h"
 #include "playlistui.h"
 
-AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
+                                                      AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
 {
     setStyleSheet("background-color: #191414; color: white;");
@@ -232,9 +232,13 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         artistCardsLayout->addWidget(artistCard);
         artistCards.append(artistCard);
         connect(artistCard, &ArtistCardWidget::doubleClicked, this, [=](const QString &name){
-            AdminProfileUI *profileWin = new AdminProfileUI(artistPic, name);
-            profileWin->setAttribute(Qt::WA_DeleteOnClose);
-            profileWin->show();
+            if (currentViewWidget != nullptr) {
+                currentViewWidget->setParent(nullptr); // quitar la vista actual
+            }
+
+            AdminProfileUI *profilePage = new AdminProfileUI(artistPic, name);
+            mainPanelLayout->addWidget(profilePage);
+            currentViewWidget = profilePage;
         });
     }
 
@@ -300,9 +304,7 @@ void AdminMenuUI::onProfilePicClicked() {
     menu->addAction(signOutAction);
 
     connect(profileAction, &QAction::triggered, this, [this]() {
-        AdminProfileUI *profileWindow = new AdminProfileUI(profilePicPath, adminUsername);
-        profileWindow->setAttribute(Qt::WA_DeleteOnClose);
-        profileWindow->show();
+        showAdminProfileUI();
     });
     connect(signOutAction, &QAction::triggered, this, [this]() {
         QWidget *login = new LoginUI();
@@ -355,6 +357,14 @@ void AdminMenuUI::onAddPlaylistClicked() {
         QDir().mkpath(userPlaylistsDir.filePath(name.trimmed()));
     }
 }
+void AdminMenuUI::showAdminProfileUI() {
+    if (currentViewWidget != nullptr) {
+        currentViewWidget->setParent(nullptr); // quitar lo que haya
+    }
 
+    AdminProfileUI *profilePage = new AdminProfileUI(profilePicPath, adminUsername);
+    mainPanelLayout->addWidget(profilePage);
+    currentViewWidget = profilePage;
+}
 
 

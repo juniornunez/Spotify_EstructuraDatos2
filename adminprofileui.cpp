@@ -1,4 +1,5 @@
 #include "adminprofileui.h"
+#include "HorizontalSongCard.h"
 #include <QPixmap>
 #include <QPainter>
 #include <QPainterPath>
@@ -7,6 +8,8 @@
 #include <QDataStream>
 #include <QDir>
 #include <QDebug>
+#include "songdata.h"
+#include "admindata.h"
 
 AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent),
@@ -15,14 +18,12 @@ AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adm
 {
     setStyleSheet("background-color: #191414; color: white;");
 
-    // --- Cargar datos del admin ---
     loadAdminData(adminUsername);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(32, 28, 32, 16);
     mainLayout->setSpacing(18);
 
-    // Top Bar
     setupTopBar();
     QHBoxLayout *topBarLayout = new QHBoxLayout;
     topBarLayout->setSpacing(18);
@@ -30,7 +31,6 @@ AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adm
     topBarLayout->addWidget(adminNameLabel, 0, Qt::AlignVCenter);
     topBarLayout->addSpacing(20);
 
-    // Tabs
     tabMusicButton = new QPushButton("Music & Albums");
     tabProfileButton = new QPushButton("Artist Profile");
     tabMusicButton->setCheckable(true);
@@ -50,10 +50,8 @@ AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adm
     topBarLayout->addWidget(tabMusicButton);
     topBarLayout->addWidget(tabProfileButton);
     topBarLayout->addStretch();
-
     mainLayout->addLayout(topBarLayout);
 
-    // Main stack (for tab content)
     mainStack = new QStackedWidget(this);
 
     setupMusicAndAlbumsTab();
@@ -61,16 +59,14 @@ AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adm
 
     mainStack->addWidget(musicAndAlbumsWidget);
     mainStack->addWidget(artistProfileWidget);
+    mainStack->setCurrentIndex(0);
 
-    mainStack->setCurrentIndex(0); // Default tab
     mainLayout->addWidget(mainStack, 1);
-
     setLayout(mainLayout);
 }
 
 void AdminProfileUI::setupTopBar()
 {
-    // --- Profile Picture Circular ---
     profilePicLabel = new QLabel;
     profilePicLabel->setFixedSize(64, 64);
 
@@ -101,69 +97,83 @@ void AdminProfileUI::setupTopBar()
 void AdminProfileUI::setupMusicAndAlbumsTab()
 {
     musicAndAlbumsWidget = new QWidget;
-    musicAndAlbumsLayout = new QVBoxLayout(musicAndAlbumsWidget);
-    musicAndAlbumsLayout->setSpacing(16);
-    musicAndAlbumsLayout->setContentsMargins(0, 0, 0, 0);
+    QVBoxLayout *outerLayout = new QVBoxLayout(musicAndAlbumsWidget);
+    outerLayout->setSpacing(16);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Songs
+    // === Título de canciones ===
     QLabel *songsTitle = new QLabel("Songs");
     QFont songTitleFont = songsTitle->font();
     songTitleFont.setPointSize(20);
     songTitleFont.setBold(true);
     songsTitle->setFont(songTitleFont);
     songsTitle->setStyleSheet("color: white; margin-top: 14px;");
-    musicAndAlbumsLayout->addWidget(songsTitle, 0, Qt::AlignLeft);
+    outerLayout->addWidget(songsTitle, 0, Qt::AlignLeft);
 
-    // Example songs list (replace with SongCardWidget if needed)
-    songsList = new QListWidget;
-    songsList->setStyleSheet(
-        "QListWidget { background: #191414; color: white; border: none; font-size: 15px; }"
-        "QListWidget::item { border-bottom: 1px solid #282828; min-height: 46px; }"
-        "QListWidget::item:selected { background: #282828; color: #1ED760; }"
-        );
-    // TODO: Aquí podrías cargar las canciones reales del admin si lo deseas
-    for (int i = 0; i < 5; ++i)
-        songsList->addItem(QString("Es ejemplo Ingee %1").arg(i+1));
-    musicAndAlbumsLayout->addWidget(songsList);
+    // Contenedor de canciones
+    QWidget *songsContainer = new QWidget;
+    QVBoxLayout *songsLayout = new QVBoxLayout(songsContainer);
+    songsLayout->setContentsMargins(0, 0, 0, 0);
+    songsLayout->setSpacing(4);
 
-    // Albums
+    QString songsPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/artistsongs")
+                            .arg(m_adminUsername);
+    QDir songsDir(songsPath);
+    QStringList songFolders = songsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+    int index = 1;
+    for (const QString &folder : songFolders) {
+        QDir songDir(songsDir.absoluteFilePath(folder));
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+        for (const QString &datFile : datFiles) {
+            QFile f(songDir.absoluteFilePath(datFile));
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f);
+                in.setVersion(QDataStream::Qt_5_15);
+                SongData song;
+                in >> song;
+                f.close();
+
+                // Crear tarjeta horizontal (pos, cover, title, artist, duration)
+                HorizontalSongCard *card = new HorizontalSongCard(
+                    index,
+                    song.getCoverPath(),
+                    song.getTitle(),
+                    song.getArtist()
+                    );
+                songsLayout->addWidget(card);
+                index++;
+            }
+        }
+    }
+
+    songsLayout->addStretch();
+
+    QScrollArea *songsScroll = new QScrollArea;
+    songsScroll->setWidget(songsContainer);
+    songsScroll->setWidgetResizable(true);
+    songsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    outerLayout->addWidget(songsScroll);
+
+    // === Título de Albums ===
     QLabel *albumsTitle = new QLabel("Albums");
     QFont albumTitleFont = albumsTitle->font();
     albumTitleFont.setPointSize(20);
     albumTitleFont.setBold(true);
     albumsTitle->setFont(albumTitleFont);
     albumsTitle->setStyleSheet("color: white; margin-top: 18px;");
-    musicAndAlbumsLayout->addWidget(albumsTitle, 0, Qt::AlignLeft);
-
-    QWidget *albumsContainer = new QWidget;
-    QHBoxLayout *albumsLayout = new QHBoxLayout(albumsContainer);
-    albumsLayout->setSpacing(16);
-    albumsLayout->setContentsMargins(0, 0, 0, 0);
-
-    for (int i = 0; i < 6; ++i) {
-        QLabel *albumCover = new QLabel;
-        albumCover->setFixedSize(110, 110);
-        albumCover->setStyleSheet("background: #232323; border-radius: 10px;");
-        albumCover->setPixmap(QPixmap(":/assets/default_album.png").scaled(110, 110, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        albumsLayout->addWidget(albumCover);
-    }
-
-    QScrollArea *albumsScroll = new QScrollArea;
-    albumsScroll->setWidget(albumsContainer);
-    albumsScroll->setWidgetResizable(true);
-    albumsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    albumsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    albumsScroll->setFixedHeight(140);
-    musicAndAlbumsLayout->addWidget(albumsScroll);
+    outerLayout->addWidget(albumsTitle, 0, Qt::AlignLeft);
 }
+
 
 void AdminProfileUI::setupArtistProfileTab()
 {
     artistProfileWidget = new QWidget;
-    artistProfileLayout = new QVBoxLayout(artistProfileWidget);
+    QVBoxLayout *artistProfileLayout = new QVBoxLayout(artistProfileWidget);
     artistProfileLayout->setSpacing(22);
     artistProfileLayout->setContentsMargins(40, 20, 40, 20);
 
+    // Foto de perfil grande
     profilePicBig = new QLabel;
     profilePicBig->setFixedSize(130, 130);
     profilePicBig->setStyleSheet("border-radius: 65px; background: #232323;");
@@ -182,7 +192,7 @@ void AdminProfileUI::setupArtistProfileTab()
     }
     artistProfileLayout->addWidget(profilePicBig, 0, Qt::AlignHCenter);
 
-    // About section
+    // Título "About"
     QLabel *aboutTitle = new QLabel("About");
     QFont aboutFont = aboutTitle->font();
     aboutFont.setPointSize(18);
@@ -191,17 +201,19 @@ void AdminProfileUI::setupArtistProfileTab()
     aboutTitle->setStyleSheet("color: white; margin-bottom: 7px;");
     artistProfileLayout->addWidget(aboutTitle, 0, Qt::AlignLeft);
 
-    // Datos del admin/artista
+    // Datos reales del admin
     realNameValue = new QLabel("Real Name: <b>" + m_realName + "</b>");
     stageNameValue = new QLabel("Stage Name: <b>" + (m_stageName.isEmpty() ? m_adminUsername : m_stageName) + "</b>");
     countryValue   = new QLabel("Country: <b>" + m_country + "</b>");
     bioValue       = new QLabel("Bio:<br>" + m_bio);
+
 
     for (QLabel* l : {realNameValue, stageNameValue, countryValue, bioValue}) {
         l->setStyleSheet("color: #bbb; font-size: 15px; margin-bottom: 3px;");
         artistProfileLayout->addWidget(l, 0, Qt::AlignLeft);
     }
 }
+
 
 void AdminProfileUI::onTabMusicClicked()
 {
@@ -217,30 +229,38 @@ void AdminProfileUI::onTabProfileClicked()
     mainStack->setCurrentIndex(1);
 }
 
-// ----------- Cargar datos del admin desde archivo -----------
+
 void AdminProfileUI::loadAdminData(const QString &adminUsername)
 {
-    QString filePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/" + adminUsername + "/perfil.dat";
+    QString filePath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/info.dat")
+    .arg(adminUsername);
+
     QFile file(filePath);
     if (!file.exists()) {
-        qWarning() << "No se encontró perfil para admin" << adminUsername;
-        m_realName = "Aca va el nombre";
+        m_realName = "Nombre no establecido";
         m_stageName = adminUsername;
-        m_country = "Aca va el pais";
-        m_bio = " Aca va la bio no lo he puesto inge es avance usted dijo";
+        m_country = "País no establecido";
+        m_bio = "Bio no establecida";
         return;
     }
 
     if (file.open(QIODevice::ReadOnly)) {
         QDataStream in(&file);
         in.setVersion(QDataStream::Qt_5_15);
-        QString realName, stageName, country, bio;
-        in >> realName >> stageName >> country >> bio;
+
+        int id;
+        QString username, password, artisticName, realName, country, genre, bio, fecha;
+        bool activo;
+
+        in >> id >> username >> password >> artisticName >> realName >> country >> genre >> bio >> fecha >> activo;
+
         m_realName = realName;
-        m_stageName = stageName;
+        m_stageName = artisticName;
         m_country = country;
         m_bio = bio;
+
         file.close();
     }
-
 }
+
+

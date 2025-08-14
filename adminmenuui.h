@@ -32,7 +32,7 @@ private slots:
     void onAddPlaylistClicked();
     void showPlaylistUI(const QString &playlistName);
     void restoreMainView();
-
+    void showAdminProfileUI();
 private:
     QString adminUsername;
     QString profilePicPath;

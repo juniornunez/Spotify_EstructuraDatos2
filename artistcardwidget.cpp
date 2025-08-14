@@ -1,9 +1,10 @@
+
 #include "artistcardwidget.h"
 #include <QPixmap>
 #include <QPainter>
 #include <QPainterPath>
 
-ArtistCardWidget::ArtistCardWidget(const QString &artistName, const QString &profilePicPath, QWidget *parent)
+                                                   ArtistCardWidget::ArtistCardWidget(const QString &artistName, const QString &profilePicPath, QWidget *parent)
     : QWidget(parent), artistName(artistName)
 {
     setFixedSize(160, 200);

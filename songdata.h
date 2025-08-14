@@ -19,7 +19,7 @@ public:
              const QString &artist,
              const QDateTime &created);
 
-    // Métodos getter
+    // Métodos getter existentes
     QString getId() const { return id; }
     QString getTitle() const { return title; }
     QString getGenre() const { return genre; }
@@ -33,8 +33,12 @@ public:
     // Nuevo getter para la ruta completa del archivo .dat
     QString getFilePath() const { return filePath; }
 
-    // Setter para filePath (lo usaremos al cargar canciones)
+    // Setter para filePath
     void setFilePath(const QString &path) { filePath = path; }
+
+    // --- NUEVOS GETTERS ÚTILES ---
+    QString getDurationString() const { return duration; } // Alias para duración
+    QString getPlayCount() const { return playCount; }     // Para futura estadística
 
     // Serialización
     friend QDataStream& operator<<(QDataStream &out, const SongData &data);
@@ -53,6 +57,9 @@ private:
 
     // Nuevo campo para guardar la ruta del archivo
     QString filePath;
+
+    // Campo opcional para reproducidas (a futuro)
+    QString playCount;
 };
 
 #endif // SONGDATA_H
