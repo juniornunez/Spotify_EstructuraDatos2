@@ -10,7 +10,7 @@
 #include <QStackedWidget>
 #include <QScrollArea>
 #include <QFrame>
-
+#include "albumcardwidget.h"
 class AdminProfileUI : public QWidget
 {
     Q_OBJECT
@@ -18,6 +18,8 @@ class AdminProfileUI : public QWidget
 public:
     explicit AdminProfileUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
 
+signals:
+     void albumCardCreated(AlbumCardWidget* card);
 private:
     void setupTopBar();
     void setupMusicAndAlbumsTab();

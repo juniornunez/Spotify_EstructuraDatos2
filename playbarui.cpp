@@ -5,6 +5,9 @@
 #include <QStyle>
 #include <QFileInfo>
 #include <QAudioOutput>
+#include <QMouseEvent>
+#include <QComboBox>
+#include <QDebug>
 
 PlayBarUI::PlayBarUI(QWidget *parent)
     : QWidget(parent)
@@ -12,7 +15,6 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     setFixedHeight(88);
     setStyleSheet("background: #181818; border-top: 1px solid #111;");
 
-    // --- Left: cover, title, artist
     coverLabel = new QLabel(this);
     coverLabel->setFixedSize(60, 60);
     coverLabel->setStyleSheet("border-radius: 8px; background: #222;");
@@ -33,36 +35,55 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     leftLayout->addWidget(coverLabel);
     leftLayout->addLayout(textLayout);
 
-    // --- Center: controls
     prevButton = new QPushButton(this);
     prevButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
     prevButton->setIconSize(QSize(30, 30));
     prevButton->setStyleSheet("background: none; border: none; color: #b3b3b3;");
-    prevButton->setEnabled(false); // Disabled por ahora
+    prevButton->setEnabled(false);
 
     playPauseButton = new QPushButton(this);
     playPauseButton->setFixedSize(46, 46);
     playPauseButton->setStyleSheet("background: #1ED760; border: none; border-radius: 23px;");
     playPauseButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/playimage.png"));
     playPauseButton->setIconSize(QSize(30, 30));
-
     connect(playPauseButton, &QPushButton::clicked, this, &PlayBarUI::onPlayPauseClicked);
 
     nextButton = new QPushButton(this);
     nextButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     nextButton->setIconSize(QSize(30, 30));
     nextButton->setStyleSheet("background: none; border: none; color: #b3b3b3;");
-    nextButton->setEnabled(false); // Disabled por ahora
+    nextButton->setEnabled(false);
 
+    // 🎵 ComboBox para repetición
+    repeatModeBox = new QComboBox(this);
+    repeatModeBox->addItem("Repetir 1 canción", RepeatOne);
+    repeatModeBox->addItem("Reproducir una vez", PlayOnce);
+    repeatModeBox->addItem("Siguiente canción", PlayNext);
+    repeatModeBox->setCurrentIndex(2); // Default = "Siguiente canción"
+    repeatModeBox->setStyleSheet(
+        "QComboBox { background-color: #222; color: white; border-radius: 8px; padding: 4px 8px; }"
+        "QComboBox::drop-down { border: none; }"
+        "QComboBox QAbstractItemView { background-color: #333; color: white; selection-background-color: #1ED760; }"
+        );
+
+    connect(repeatModeBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index){
+                repeatMode = static_cast<RepeatMode>(repeatModeBox->itemData(index).toInt());
+                qDebug() << "Modo repetición cambiado a:" << repeatMode;
+            });
+
+    // --- Controls layout
     QHBoxLayout *controlsLayout = new QHBoxLayout;
     controlsLayout->setSpacing(20);
     controlsLayout->addWidget(prevButton);
     controlsLayout->addWidget(playPauseButton);
     controlsLayout->addWidget(nextButton);
+    controlsLayout->addWidget(repeatModeBox); // ✅ añadimos el combo
 
     // --- Bottom: progress bar
     timeLabelLeft = new QLabel("0:00", this);
     timeLabelLeft->setStyleSheet("color: #ccc; font-size: 13px;");
+
     progressBar = new QSlider(Qt::Horizontal, this);
     progressBar->setStyleSheet(
         "QSlider::groove:horizontal { background: #555; height: 6px; border-radius: 3px; }"
@@ -70,9 +91,12 @@ PlayBarUI::PlayBarUI(QWidget *parent)
         "QSlider::sub-page:horizontal { background: #fff; border-radius: 3px; }"
         "QSlider { height: 6px; }"
         );
-    progressBar->setRange(0, 1000);
+    progressBar->setRange(0, 0);
     progressBar->setValue(0);
-    progressBar->setEnabled(false); // Solo visual
+    progressBar->setEnabled(true);
+
+    connect(progressBar, &QSlider::sliderMoved, this, &PlayBarUI::onSliderMoved);
+    connect(progressBar, &QSlider::sliderReleased, this, &PlayBarUI::onSliderReleased);
 
     timeLabelRight = new QLabel("0:00", this);
     timeLabelRight->setStyleSheet("color: #ccc; font-size: 13px;");
@@ -82,12 +106,12 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     progressLayout->addWidget(progressBar, 1);
     progressLayout->addWidget(timeLabelRight);
 
-    // --- Main layout vertical (controls arriba, progress abajo)
+    // --- Main layout vertical
     QVBoxLayout *centerLayout = new QVBoxLayout;
     centerLayout->addLayout(controlsLayout);
     centerLayout->addLayout(progressLayout);
 
-    // --- Todo el playbar
+    // --- Playbar completo
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->setContentsMargins(18, 8, 18, 8);
     mainLayout->setSpacing(32);
@@ -97,12 +121,29 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     setLayout(mainLayout);
 
     // --- Player + AudioOutput
-    audioOutput = new QAudioOutput(this);  // <--- ¡NUEVO!
-    audioOutput->setVolume(1.0);           // Opcional: volumen al 100%
+    audioOutput = new QAudioOutput(this);
+    audioOutput->setVolume(1.0);
     player = new QMediaPlayer(this);
-    player->setAudioOutput(audioOutput);   // <--- ¡Muy importante!
+    player->setAudioOutput(audioOutput);
+
     connect(player, &QMediaPlayer::positionChanged, this, &PlayBarUI::onPositionChanged);
     connect(player, &QMediaPlayer::durationChanged, this, &PlayBarUI::onDurationChanged);
+
+    // 📌 Manejo del fin de canción
+    connect(player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
+        if (status == QMediaPlayer::EndOfMedia) {
+            if (repeatMode == RepeatOne) {
+                player->setPosition(0);
+                player->play();
+            } else if (repeatMode == PlayOnce) {
+                // No hace nada, solo para y queda ahí
+                isPlaying = false;
+                playPauseButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/playimage.png"));
+            } else if (repeatMode == PlayNext) {
+                emit requestNextSong(); // 🚀 Avisamos a PlaylistDisplayUI
+            }
+        }
+    });
 }
 
 void PlayBarUI::setSongInfo(const QString &coverPath, const QString &title, const QString &artist, const QString &audioPath)
@@ -143,10 +184,8 @@ void PlayBarUI::onPlayPauseClicked()
 void PlayBarUI::onPositionChanged(qint64 position)
 {
     timeLabelLeft->setText(formatTime(position));
-    if (player->duration() > 0) {
-        progressBar->setValue(static_cast<int>(position * 1000 / player->duration()));
-    } else {
-        progressBar->setValue(0);
+    if (player->duration() > 0 && !progressBar->isSliderDown()) {
+        progressBar->setValue(static_cast<int>(position / 1000));
     }
 }
 
@@ -161,6 +200,7 @@ void PlayBarUI::play()
 
 void PlayBarUI::onDurationChanged(qint64 duration)
 {
+    progressBar->setRange(0, static_cast<int>(duration / 1000));
     timeLabelRight->setText(formatTime(duration));
 }
 
@@ -171,3 +211,14 @@ QString PlayBarUI::formatTime(qint64 ms)
     int sec = seconds % 60;
     return QString::number(min) + ":" + QString("%1").arg(sec, 2, 10, QLatin1Char('0'));
 }
+
+void PlayBarUI::onSliderMoved(int value)
+{
+    timeLabelLeft->setText(formatTime(value * 1000));
+}
+
+void PlayBarUI::onSliderReleased()
+{
+    player->setPosition(progressBar->value() * 1000);
+}
+

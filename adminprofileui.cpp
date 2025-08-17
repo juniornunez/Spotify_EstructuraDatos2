@@ -10,6 +10,8 @@
 #include <QDebug>
 #include "songdata.h"
 #include "admindata.h"
+#include "albumcardwidget.h"
+#include "adminmenuui.h"
 
 AdminProfileUI::AdminProfileUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent),
@@ -134,19 +136,19 @@ void AdminProfileUI::setupMusicAndAlbumsTab()
                 in >> song;
                 f.close();
 
-                // Crear tarjeta horizontal (pos, cover, title, artist, duration)
                 HorizontalSongCard *card = new HorizontalSongCard(
                     index,
                     song.getCoverPath(),
                     song.getTitle(),
-                    song.getArtist()
+                    song.getArtist(),
+                    song.getAudioPath()
+
                     );
                 songsLayout->addWidget(card);
                 index++;
             }
         }
     }
-
     songsLayout->addStretch();
 
     QScrollArea *songsScroll = new QScrollArea;
@@ -163,7 +165,65 @@ void AdminProfileUI::setupMusicAndAlbumsTab()
     albumsTitle->setFont(albumTitleFont);
     albumsTitle->setStyleSheet("color: white; margin-top: 18px;");
     outerLayout->addWidget(albumsTitle, 0, Qt::AlignLeft);
+
+    // --- Contenedor de álbumes ---
+    QWidget *albumsContainer = new QWidget;
+    QHBoxLayout *albumsLayout = new QHBoxLayout(albumsContainer);
+    albumsLayout->setContentsMargins(0, 0, 0, 0);
+    albumsLayout->setSpacing(8);
+
+    QString albumsSongsPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/artistsongs")
+                                  .arg(m_adminUsername);
+    QDir albumsSongsDir(albumsSongsPath);
+    QStringList albumsSongFolders = albumsSongsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+    QMap<QString, QString> albumCovers; // albumName -> coverPath
+
+    for (const QString &folder : albumsSongFolders) {
+        QDir songDir(albumsSongsDir.absoluteFilePath(folder));
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+        for (const QString &datFile : datFiles) {
+            QFile f(songDir.absoluteFilePath(datFile));
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f);
+                in.setVersion(QDataStream::Qt_5_15);
+                SongData song;
+                in >> song;
+                f.close();
+
+                if (!song.getAlbumName().isEmpty() && !albumCovers.contains(song.getAlbumName())) {
+                    albumCovers[song.getAlbumName()] = song.getCoverPath();
+                }
+            }
+        }
+    }
+
+    // Crear las AlbumCardWidgets y emitir señal
+    for (auto it = albumCovers.begin(); it != albumCovers.end(); ++it) {
+        AlbumCardWidget *albumCard = new AlbumCardWidget(
+            it.key(),   // albumName
+            it.value(), // coverPath
+            m_stageName.isEmpty() ? m_adminUsername : m_stageName
+            );
+        albumsLayout->addWidget(albumCard);
+
+        // 🔗 Emitir señal para que AdminMenuUI pueda conectar
+        if (AdminMenuUI *menu = qobject_cast<AdminMenuUI*>(this->parent())) {
+            connect(albumCard, &AlbumCardWidget::albumDoubleClicked,
+                    menu, &AdminMenuUI::showAlbumUI);
+        }
+    }
+    albumsLayout->addStretch();
+
+    QScrollArea *albumsScroll = new QScrollArea;
+    albumsScroll->setWidget(albumsContainer);
+    albumsScroll->setWidgetResizable(true);
+    albumsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    albumsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    albumsScroll->setFixedHeight(220); // altura ajustada para las tarjetas
+    outerLayout->addWidget(albumsScroll);
 }
+
 
 
 void AdminProfileUI::setupArtistProfileTab()
@@ -206,7 +266,6 @@ void AdminProfileUI::setupArtistProfileTab()
     stageNameValue = new QLabel("Stage Name: <b>" + (m_stageName.isEmpty() ? m_adminUsername : m_stageName) + "</b>");
     countryValue   = new QLabel("Country: <b>" + m_country + "</b>");
     bioValue       = new QLabel("Bio:<br>" + m_bio);
-
 
     for (QLabel* l : {realNameValue, stageNameValue, countryValue, bioValue}) {
         l->setStyleSheet("color: #bbb; font-size: 15px; margin-bottom: 3px;");
@@ -262,5 +321,4 @@ void AdminProfileUI::loadAdminData(const QString &adminUsername)
         file.close();
     }
 }
-
 

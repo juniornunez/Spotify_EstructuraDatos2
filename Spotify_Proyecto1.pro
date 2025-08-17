@@ -10,12 +10,14 @@ SOURCES += \
     admindata.cpp \
     adminmenuui.cpp \
     adminprofileui.cpp \
+    albumcardwidget.cpp \
     artistcardwidget.cpp \
     artistsettingsui.cpp \
     horizontalsongcard.cpp \
     main.cpp \
     loginUI.cpp \
     playbarui.cpp \
+    playlistdisplayui.cpp \
     playlistui.cpp \
     questionui.cpp \
     registeradminui.cpp \
@@ -34,12 +36,14 @@ HEADERS += \
     admindata.h \
     adminmenuui.h \
     adminprofileui.h \
+    albumcardwidget.h \
     artistcardwidget.h \
     artistsettingsui.h \
     horizontalsongcard.h \
     loginUI.h \
     managesongsui.h \
     playbarui.h \
+    playlistdisplayui.h \
     playlistui.h \
     questionui.h \
     registeradminui.h \

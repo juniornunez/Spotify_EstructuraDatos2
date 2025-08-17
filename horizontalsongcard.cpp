@@ -1,13 +1,18 @@
 #include "HorizontalSongCard.h"
 #include <QPixmap>
 #include <QFont>
+#include <QMouseEvent>
+#include <QDebug>
 
 HorizontalSongCard::HorizontalSongCard(int position,
                                        const QString &coverPath,
                                        const QString &title,
                                        const QString &artist,
+                                       const QString &audioPath,
                                        QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+    coverPath(coverPath),
+    audioPath(audioPath)
 {
     setFixedHeight(50);
     setStyleSheet("background-color: transparent; color: white;");
@@ -31,7 +36,7 @@ HorizontalSongCard::HorizontalSongCard(int position,
     }
     layout->addWidget(coverLabel);
 
-    // Título + artista (vertical)
+    // Titulo + artista
     QVBoxLayout *textLayout = new QVBoxLayout;
     titleLabel = new QLabel(title);
     titleLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
@@ -41,3 +46,19 @@ HorizontalSongCard::HorizontalSongCard(int position,
     textLayout->addWidget(artistLabel);
     layout->addLayout(textLayout, 1);
 }
+
+// === Doble clic sobre la card ===
+void HorizontalSongCard::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        qDebug() << "Doble clic en canción:" << titleLabel->text();
+        emit songDoubleClicked(coverPath,
+                               titleLabel->text(),
+                               artistLabel->text(),
+                               audioPath);
+    }
+    QWidget::mouseDoubleClickEvent(event);
+}
+
+
+

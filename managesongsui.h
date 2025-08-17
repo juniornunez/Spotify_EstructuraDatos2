@@ -76,7 +76,14 @@ private:
             rowLayout->setContentsMargins(0, 0, 0, 0);
 
             // Card
-            HorizontalSongCard *card = new HorizontalSongCard(0, song.getCoverPath(), song.getTitle(), song.getArtist());
+            HorizontalSongCard *card = new HorizontalSongCard(
+                0,
+                song.getCoverPath(),
+                song.getTitle(),
+                song.getArtist(),
+                song.getAudioPath()
+                );
+
             rowLayout->addWidget(card, 1);
 
             // Botón eliminar

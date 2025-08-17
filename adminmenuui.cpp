@@ -15,7 +15,10 @@
 #include "trendingui.h"
 #include "playlistui.h"
 #include "managesongsui.h"
-                                                      AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
+#include "playlistdisplayui.h"
+#include "albumcardwidget.h"
+
+AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
 {
     setStyleSheet("background-color: #191414; color: white;");
@@ -89,11 +92,19 @@
     sidebarLayout->addWidget(artistSettingsButton);
     connect(artistSettingsButton, &QPushButton::clicked, this, &AdminMenuUI::onArtistSettingsClicked);
 
-    // === PANEL PRINCIPAL ===
+    // === PANEL PRINCIPAL (con estructura fija) ===
     QWidget *mainPanelWidget = new QWidget;
-    mainPanelLayout = new QVBoxLayout(mainPanelWidget);
-    mainPanelLayout->setContentsMargins(20, 20, 20, 20);
+
+    // Layout principal del panel derecho (fijo)
+    QVBoxLayout *panelWithPlaybar = new QVBoxLayout(mainPanelWidget);
+    panelWithPlaybar->setContentsMargins(20, 20, 20, 20);
+    panelWithPlaybar->setSpacing(0);
+
+    // Layout dinámico donde se cambian vistas
+    mainPanelLayout = new QVBoxLayout;
+    mainPanelLayout->setContentsMargins(0, 0, 0, 0);
     mainPanelLayout->setSpacing(16);
+
     // Top bar
     topBarLayout = new QHBoxLayout;
 
@@ -105,7 +116,6 @@
     homeButton->setStyleSheet("QPushButton { background: transparent; border: none; }");
     topBarLayout->addWidget(homeButton, 0, Qt::AlignLeft);
 
-    // Click en el botón Home para restaurar vista original
     connect(homeButton, &QPushButton::clicked, this, &AdminMenuUI::restoreMainView);
 
     // Barra de búsqueda
@@ -148,9 +158,10 @@
     }
     topBarLayout->addWidget(profilePicButton, 0, Qt::AlignRight);
     connect(profilePicButton, &QPushButton::clicked, this, &AdminMenuUI::onProfilePicClicked);
+
     mainPanelLayout->addLayout(topBarLayout);
 
-    // Guardar contenido original en un widget
+    // Guardar contenido original
     originalContentWidget = new QWidget;
     QVBoxLayout *originalLayout = new QVBoxLayout(originalContentWidget);
     originalLayout->setContentsMargins(0, 0, 0, 0);
@@ -231,24 +242,40 @@
         ArtistCardWidget *artistCard = new ArtistCardWidget(adminName, artistPic);
         artistCardsLayout->addWidget(artistCard);
         artistCards.append(artistCard);
-        connect(artistCard, &ArtistCardWidget::doubleClicked, this, [=](const QString &name){
+        connect(artistCard, &ArtistCardWidget::doubleClicked, this, [=](const QString &artistUsername){
             if (currentViewWidget != nullptr) {
-                currentViewWidget->setParent(nullptr); // quitar la vista actual
+                currentViewWidget->setParent(nullptr);
             }
 
-            AdminProfileUI *profilePage = new AdminProfileUI(artistPic, name);
+            QString artistPicPath;
+            QDir artistFolder(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1").arg(artistUsername));
+            QStringList images = artistFolder.entryList(QStringList() << "*.png" << "*.jpg" << "*.jpeg", QDir::Files);
+            if (!images.isEmpty()) {
+                artistPicPath = artistFolder.absoluteFilePath(images.first());
+            }
+
+            AdminProfileUI *profilePage = new AdminProfileUI(artistPicPath, artistUsername, this);
             mainPanelLayout->addWidget(profilePage);
             currentViewWidget = profilePage;
+
+            connect(profilePage, &AdminProfileUI::albumCardCreated, this, [this](AlbumCardWidget* card){
+                connect(card, &AlbumCardWidget::albumDoubleClicked,
+                        this, &AdminMenuUI::showAlbumUI);
+            });
         });
     }
 
     // PlayBar
     playBar = new PlayBarUI;
     playBar->setVisible(false);
-    originalLayout->addWidget(playBar);
 
+    // Agregar contenido original al mainPanelLayout
     mainPanelLayout->addWidget(originalContentWidget);
     currentViewWidget = originalContentWidget;
+
+    // Agregar al panel fijo (arriba las vistas, abajo la barra)
+    panelWithPlaybar->addLayout(mainPanelLayout, 1);
+    panelWithPlaybar->addWidget(playBar, 0, Qt::AlignBottom);
 
     // Layout principal
     mainLayout = new QHBoxLayout(this);
@@ -259,6 +286,7 @@
     setWindowTitle("Musicfy - Admin Menu");
 }
 
+
 void AdminMenuUI::showPlaylistUI(const QString &playlistName) {
     if (currentViewWidget != nullptr) {
         currentViewWidget->setParent(nullptr);
@@ -267,9 +295,6 @@ void AdminMenuUI::showPlaylistUI(const QString &playlistName) {
     mainPanelLayout->addWidget(playlistWin);
     currentViewWidget = playlistWin;
 }
-
-
-
 
 void AdminMenuUI::restoreMainView() {
     if (currentViewWidget != nullptr) {
@@ -319,7 +344,6 @@ void AdminMenuUI::restoreMainView() {
     currentViewWidget = originalContentWidget;
 }
 
-
 void AdminMenuUI::onArtistSettingsClicked() {
     ArtistSettingsUI *settingsWindow = new ArtistSettingsUI(adminUsername, this);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -335,7 +359,6 @@ void AdminMenuUI::onArtistSettingsClicked() {
 
     settingsWindow->show();
 }
-
 
 void AdminMenuUI::onProfilePicClicked() {
     QMenu *menu = new QMenu(this);
@@ -399,14 +422,51 @@ void AdminMenuUI::onAddPlaylistClicked() {
         QDir().mkpath(userPlaylistsDir.filePath(name.trimmed()));
     }
 }
+
 void AdminMenuUI::showAdminProfileUI() {
     if (currentViewWidget != nullptr) {
         currentViewWidget->setParent(nullptr); // quitar lo que haya
     }
 
-    AdminProfileUI *profilePage = new AdminProfileUI(profilePicPath, adminUsername);
+    AdminProfileUI *profilePage = new AdminProfileUI(profilePicPath, adminUsername, this);
     mainPanelLayout->addWidget(profilePage);
     currentViewWidget = profilePage;
+
+    // 👇 Conectar álbumes también aquí
+    connect(profilePage, &AdminProfileUI::albumCardCreated, this, [this](AlbumCardWidget* card){
+        connect(card, &AlbumCardWidget::albumDoubleClicked,
+                this, &AdminMenuUI::showAlbumUI);
+    });
 }
+
+
+void AdminMenuUI::showAlbumUI(const QString &albumName,
+                              const QString &coverPath,
+                              const QString &artistName)
+{
+    qDebug() << "➡️ showAlbumUI llamado con:" << albumName << coverPath << artistName;
+
+    if (currentViewWidget != nullptr) {
+        currentViewWidget->setParent(nullptr);
+    }
+
+    PlaylistDisplayUI *albumView = new PlaylistDisplayUI(albumName, coverPath, artistName, adminUsername, this);
+    mainPanelLayout->addWidget(albumView);
+    currentViewWidget = albumView;
+
+    connect(playBar, &PlayBarUI::requestNextSong, albumView, &PlaylistDisplayUI::playNextSong);
+
+    // 🔗 Conectar las canciones al PlayBar
+    connect(albumView, &PlaylistDisplayUI::songSelected, this, [this](const QString &cover,
+                                                                      const QString &title,
+                                                                      const QString &artist,
+                                                                      const QString &audioPath){
+        playBar->setSongInfo(cover, title, artist, audioPath);
+        playBar->setVisible(true);
+        playBar->play();
+    });
+}
+
+
 
 

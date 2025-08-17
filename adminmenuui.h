@@ -19,6 +19,13 @@
 class AdminMenuUI : public QWidget
 {
     Q_OBJECT
+
+public slots:
+    void showAlbumUI(const QString &albumName,
+                     const QString &coverPath,
+                     const QString &artistName);
+
+
 public:
     explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
     void restoreMainView();
