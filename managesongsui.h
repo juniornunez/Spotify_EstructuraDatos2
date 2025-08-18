@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
+#include <QFileInfo>
 #include "songdata.h"
 #include "horizontalsongcard.h"
 
@@ -40,7 +41,7 @@ private:
 
     void loadSongs()
     {
-        // Limpiar lo que haya
+        // Limpiar lo que haya (excepto el título en [0])
         QLayoutItem *child;
         while ((child = mainLayout->takeAt(1)) != nullptr) {
             if (child->widget()) child->widget()->deleteLater();
@@ -75,7 +76,7 @@ private:
             QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
             rowLayout->setContentsMargins(0, 0, 0, 0);
 
-            // Card
+            // Card de canción
             HorizontalSongCard *card = new HorizontalSongCard(
                 0,
                 song.getCoverPath(),
@@ -83,7 +84,6 @@ private:
                 song.getArtist(),
                 song.getAudioPath()
                 );
-
             rowLayout->addWidget(card, 1);
 
             // Botón eliminar
@@ -96,10 +96,10 @@ private:
 
             connect(deleteButton, &QPushButton::clicked, this, [=]() {
                 if (QMessageBox::question(this, "Confirmar eliminación",
-                                          QString("¿Eliminar la canción \"%1\"?").arg(song.getTitle())) == QMessageBox::Yes)
+                                          QString("¿Eliminar la canción \"%1\" de todo el sistema?").arg(song.getTitle())) == QMessageBox::Yes)
                 {
-                    deleteSong(song.getId());
-                    loadSongs(); // refrescar
+                    deleteSongEverywhere(song.getId());
+                    loadSongs(); // refrescar lista
                 }
             });
 
@@ -107,27 +107,37 @@ private:
         }
     }
 
-    void deleteSong(const QString &songId)
+    void deleteSongEverywhere(const QString &songId)
     {
-        // Ruta en globalsongs
+        // 1. Eliminar de globalsongs
         QDir globalsDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
-        QStringList globalSubdirs = globalsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        for (const QString &folder : globalSubdirs) {
-            if (folder == songId) {
-                QDir dirToRemove(globalsDir.absoluteFilePath(folder));
-                dirToRemove.removeRecursively();
-                break;
-            }
+        QString globalPath = globalsDir.filePath(songId);
+        if (QDir(globalPath).exists()) {
+            QDir(globalPath).removeRecursively();
         }
 
-        // Ruta en artistsongs
+        // 2. Eliminar de artistsongs (del admin actual)
         QDir artistDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/artistsongs").arg(adminUsername));
-        QStringList artistSubdirs = artistDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        for (const QString &folder : artistSubdirs) {
-            if (folder == songId) {
-                QDir dirToRemove(artistDir.absoluteFilePath(folder));
-                dirToRemove.removeRecursively();
-                break;
+        QString artistPath = artistDir.filePath(songId);
+        if (QDir(artistPath).exists()) {
+            QDir(artistPath).removeRecursively();
+        }
+
+        // 3. Eliminar de TODAS las playlists de TODOS los usuarios
+        QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1");
+        QStringList dirs = baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+        for (const QString &dir : dirs) {
+            if (dir.startsWith("playlists_")) {
+                QDir userPlaylists(baseDir.filePath(dir));
+                QStringList playlists = userPlaylists.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+                for (const QString &playlist : playlists) {
+                    QString songPath = userPlaylists.filePath(playlist + "/" + songId);
+                    if (QDir(songPath).exists()) {
+                        QDir(songPath).removeRecursively();
+                    }
+                }
             }
         }
     }

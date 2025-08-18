@@ -5,42 +5,62 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include "songdata.h"
+#include <QPushButton>
+class HorizontalSongCard;
 
 class PlaylistDisplayUI : public QWidget
 {
     Q_OBJECT
-
 public:
+    // Constructor para álbumes
     explicit PlaylistDisplayUI(const QString &albumName,
                                const QString &coverPath,
                                const QString &artistName,
                                const QString &adminUsername,
                                QWidget *parent = nullptr);
 
-public slots:
-    void playNextSong(); // 🚀 Reproduce la siguiente canción
+    // Constructor para playlists de usuario
+    explicit PlaylistDisplayUI(const QString &playlistName,
+                               const QString &username,
+                               QWidget *parent = nullptr);
 
 signals:
     void songSelected(const QString &cover,
                       const QString &title,
                       const QString &artist,
-                      const QString &audioPath);
+                      const QString &audio);
+
+public slots:
+    void playNextSong();
+
+private slots:
+    void onAddSongButtonClicked();
 
 private:
-    void loadAlbumSongs();
+    // Datos álbum
+    QString albumName;
+    QString coverPath;
+    QString artistName;
+    QString adminUsername;
+    QPushButton *addSongButton;
+    // Datos playlist usuario
+    QString playlistName;
+    QString username;
 
+    // Estado
+    bool isUserPlaylist;
+    int currentIndex;
+    QList<SongData> songs;
+
+    // UI
     QLabel *coverLabel;
     QLabel *albumTitleLabel;
     QLabel *artistLabel;
     QVBoxLayout *songsLayout;
 
-    QString albumName;
-    QString coverPath;
-    QString artistName;
-    QString adminUsername;
-
-    QList<SongData> songs;  // 🔑 Lista de canciones del álbum
-    int currentIndex;       // 🔑 Canción actual
+    // Helpers
+    void loadAlbumSongs();
+    void loadUserPlaylistSongs();
 };
 
 #endif // PLAYLISTDISPLAYUI_H

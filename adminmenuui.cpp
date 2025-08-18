@@ -13,7 +13,7 @@
 #include "adminprofileui.h"
 #include "loginUI.h"
 #include "trendingui.h"
-#include "playlistui.h"
+#include "playlistdisplayui.h"
 #include "managesongsui.h"
 #include "playlistdisplayui.h"
 #include "albumcardwidget.h"
@@ -82,6 +82,26 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         trendWin->setAttribute(Qt::WA_DeleteOnClose);
         trendWin->show();
     });
+
+    // Botón Rate Songs
+    rateSongsButton = new QPushButton("Rate Songs");
+    rateSongsButton->setStyleSheet(
+        "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
+        "QPushButton:hover { background-color: #282828; color: #fff; }"
+        );
+    sidebarLayout->addWidget(rateSongsButton);
+
+    connect(rateSongsButton, &QPushButton::clicked, this, [=]() {
+        if (currentViewWidget != nullptr) {
+            currentViewWidget->setParent(nullptr);
+        }
+
+        // 👇 Crear SongRaterUI dentro del panel derecho
+        SongRaterUI *rateUI = new SongRaterUI(adminUsername, this);
+        mainPanelLayout->addWidget(rateUI);
+        currentViewWidget = rateUI;
+    });
+
 
     // Botón Artist Settings
     artistSettingsButton = new QPushButton("Artist Settings");
@@ -291,10 +311,24 @@ void AdminMenuUI::showPlaylistUI(const QString &playlistName) {
     if (currentViewWidget != nullptr) {
         currentViewWidget->setParent(nullptr);
     }
-    PlaylistUI *playlistWin = new PlaylistUI(playlistName, adminUsername); // pasa el username
-    mainPanelLayout->addWidget(playlistWin);
-    currentViewWidget = playlistWin;
+
+    // 📌 Usar PlaylistDisplayUI en modo "user playlist"
+    PlaylistDisplayUI *playlistView = new PlaylistDisplayUI(playlistName, adminUsername, this);
+    mainPanelLayout->addWidget(playlistView);
+    currentViewWidget = playlistView;
+
+    // 🔗 Conectar el playBar con la playlist
+    connect(playBar, &PlayBarUI::requestNextSong, playlistView, &PlaylistDisplayUI::playNextSong);
+
+    connect(playlistView, &PlaylistDisplayUI::songSelected, this,
+            [this](const QString &cover, const QString &title,
+                   const QString &artist, const QString &audioPath) {
+                playBar->setSongInfo(cover, title, artist, audioPath);
+                playBar->setVisible(true);
+                playBar->play();
+            });
 }
+
 
 void AdminMenuUI::restoreMainView() {
     if (currentViewWidget != nullptr) {
@@ -410,18 +444,42 @@ void AdminMenuUI::loadPlaylists() {
 
 void AdminMenuUI::onAddPlaylistClicked() {
     bool ok;
-    QString name = QInputDialog::getText(this, "Nueva Playlist", "Nombre de la playlist:", QLineEdit::Normal, "", &ok);
+    QString name = QInputDialog::getText(this, "Nueva Playlist",
+                                         "Nombre de la playlist:",
+                                         QLineEdit::Normal, "", &ok);
     if (ok && !name.trimmed().isEmpty()) {
-        playlistList->addItem(name.trimmed());
+        QString playlistName = name.trimmed();
 
-        QDir userPlaylistsDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1").arg(adminUsername));
+        // Pedir portada
+        QString coverPath = QFileDialog::getOpenFileName(this,
+                                                         "Seleccionar portada de la playlist",
+                                                         "",
+                                                         "Imágenes (*.png *.jpg *.jpeg)");
+        if (coverPath.isEmpty()) {
+            QMessageBox::warning(this, "Sin portada",
+                                 "Debes seleccionar una imagen de portada.");
+            return;
+        }
+
+        // Crear carpeta de la playlist
+        QDir userPlaylistsDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1")
+                                  .arg(adminUsername));
         if (!userPlaylistsDir.exists()) {
             QDir().mkpath(userPlaylistsDir.absolutePath());
         }
 
-        QDir().mkpath(userPlaylistsDir.filePath(name.trimmed()));
+        QString playlistDirPath = userPlaylistsDir.filePath(playlistName);
+        QDir().mkpath(playlistDirPath);
+
+        // Copiar la portada seleccionada como cover.jpg dentro de la carpeta
+        QString destCoverPath = playlistDirPath + "/cover.jpg";
+        QFile::copy(coverPath, destCoverPath);
+
+        // Agregar a la lista visual
+        playlistList->addItem(playlistName);
     }
 }
+
 
 void AdminMenuUI::showAdminProfileUI() {
     if (currentViewWidget != nullptr) {

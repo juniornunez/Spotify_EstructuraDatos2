@@ -15,6 +15,7 @@
 #include "songcardwidget.h"
 #include "artistcardwidget.h"
 #include "playbarui.h"
+#include "songraterui.h"
 
 class AdminMenuUI : public QWidget
 {
@@ -50,7 +51,7 @@ private:
     QVBoxLayout *mainPanelLayout;
     QHBoxLayout *topBarLayout;
     QHBoxLayout *cardsLayout;
-
+    QPushButton *rateSongsButton;
     QPushButton *homeButton;
     QPushButton *addPlaylistButton;
     QPushButton *trendingButton;

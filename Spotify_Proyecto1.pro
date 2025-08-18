@@ -18,12 +18,12 @@ SOURCES += \
     loginUI.cpp \
     playbarui.cpp \
     playlistdisplayui.cpp \
-    playlistui.cpp \
     questionui.cpp \
     registeradminui.cpp \
     registerui.cpp \
     songcardwidget.cpp \
     songdata.cpp \
+    songraterui.cpp \
     trendingui.cpp \
     userdata.cpp \
     usermenuui.cpp \
@@ -44,12 +44,12 @@ HEADERS += \
     managesongsui.h \
     playbarui.h \
     playlistdisplayui.h \
-    playlistui.h \
     questionui.h \
     registeradminui.h \
     registerui.h \
     songcardwidget.h \
     songdata.h \
+    songraterui.h \
     trendingui.h \
     userdata.h \
     usermenuui.h \

@@ -1,15 +1,23 @@
 #include "addplaylistsongs.h"
+#include "songdata.h"
+
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QFile>
 #include <QDataStream>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QScrollArea>
+#include <QLabel>
+#include <QPushButton>
+#include <QPixmap>
+#include <QDir>
 
 AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playlistName, QWidget *parent)
     : QDialog(parent), username(username), playlistName(playlistName)
 {
     setWindowTitle("Add Songs to Playlist");
-    resize(400, 500);
+    resize(450, 600);
     setStyleSheet("background-color: #191414; color: white;");
 
     mainLayout = new QVBoxLayout(this);
@@ -24,16 +32,18 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
     scroll->setWidgetResizable(true);
     QWidget *container = new QWidget;
     QVBoxLayout *songsLayout = new QVBoxLayout(container);
-    songsLayout->setSpacing(8);
+    songsLayout->setSpacing(10);
 
+    // Directorio global de canciones
     QDir songsDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
     QStringList subdirs = songsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     for (const QString &songFolder : subdirs) {
         QDir songDir(songsDir.absoluteFilePath(songFolder));
         QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+
         for (const QString &datFile : datFiles) {
-            QString datPath = songDir.absoluteFilePath(datFile); // Ruta real del .dat
+            QString datPath = songDir.absoluteFilePath(datFile);
             QFile f(datPath);
             if (f.open(QIODevice::ReadOnly)) {
                 QDataStream in(&f);
@@ -44,11 +54,27 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
 
                 QWidget *songRow = new QWidget;
                 QHBoxLayout *rowLayout = new QHBoxLayout(songRow);
-                rowLayout->setContentsMargins(0, 0, 0, 0);
+                rowLayout->setContentsMargins(5, 5, 5, 5);
+                rowLayout->setSpacing(10);
 
+                // 🎵 Cover
+                QLabel *coverLabel = new QLabel;
+                coverLabel->setFixedSize(40, 40);
+                QPixmap pix(song.getCoverPath());
+                if (!pix.isNull()) {
+                    coverLabel->setPixmap(pix.scaled(40, 40, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+                } else {
+                    coverLabel->setStyleSheet("background:#333; color:#aaa;");
+                    coverLabel->setText("No\nImg");
+                    coverLabel->setAlignment(Qt::AlignCenter);
+                }
+                rowLayout->addWidget(coverLabel);
+
+                // 🎵 Texto
                 QLabel *songLabel = new QLabel(QString("%1 - %2").arg(song.getTitle(), song.getArtist()));
                 rowLayout->addWidget(songLabel);
 
+                // 🎵 Botón +
                 QPushButton *addBtn = new QPushButton("+");
                 addBtn->setFixedSize(32, 32);
                 addBtn->setStyleSheet(
@@ -58,7 +84,7 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
                 rowLayout->addWidget(addBtn);
 
                 connect(addBtn, &QPushButton::clicked, this, [=]() {
-                    onAddSongClicked(song, datPath); // Pasamos también la ruta del .dat
+                    onAddSongClicked(song, datPath);
                 });
 
                 songsLayout->addWidget(songRow);
@@ -72,8 +98,9 @@ AddPlaylistSongs::AddPlaylistSongs(const QString &username, const QString &playl
 }
 
 void AddPlaylistSongs::onAddSongClicked(const SongData &song, const QString &sourceDatPath) {
-    QString playlistDirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/%2")
-    .arg(username, playlistName);
+    // 📌 CAMBIO: Guardar en la misma carpeta donde PlaylistDisplayUI busca
+    QString playlistDirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/playlists_%1/%2")
+                                  .arg(username, playlistName);
 
     // Crear carpeta de playlist si no existe
     QDir().mkpath(playlistDirPath);
