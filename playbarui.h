@@ -11,12 +11,23 @@
 
 class QAudioOutput;
 
+struct SongNode {
+    QString cover;
+    QString title;
+    QString artist;
+    QString audioPath;
+    SongNode* next;
+
+    SongNode(const QString &c, const QString &t, const QString &a, const QString &p)
+        : cover(c), title(t), artist(a), audioPath(p), next(nullptr) {}
+};
+
 class PlayBarUI : public QWidget
 {
     Q_OBJECT
 public:
     enum RepeatMode { RepeatOne, PlayOnce, PlayNext };
-
+      void nextSong();
     explicit PlayBarUI(const QString &username,bool isAdmin, QWidget *parent = nullptr);
 
     void setSongInfo(const QString &coverPath,
@@ -42,10 +53,12 @@ private slots:
     void onSliderReleased();
 
 private:
+    SongNode* head = nullptr;       // inicio de la lista
+    SongNode* currentNode = nullptr; // nodo actual
     void incrementPlayCount();
     QString formatTime(qint64 ms);
     bool isAdmin;
-    // 🎵 Datos UI
+
     QLabel *coverLabel;
     QLabel *titleLabel;
     QLabel *artistLabel;
@@ -57,7 +70,6 @@ private:
     QLabel *timeLabelRight;
     QSlider *progressBar;
 
-    // 🎶 Player
     QMediaPlayer *player;
     QAudioOutput *audioOutput;
     bool isPlaying = false;

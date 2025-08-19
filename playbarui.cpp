@@ -214,7 +214,7 @@ void PlayBarUI::incrementPlayCount()
     QString userDir = basePath + currentUser;
     QDir().mkpath(userDir + "/songsplays");
 
-    // 🔹 Guardar plays individuales de la canción (por título)
+    //  Guardar plays individuales de la canción (por título)
     QString songFile = userDir + "/songsplays/" + currentSongTitle + ".dat";
     QFile f(songFile);
     int plays = 0;
@@ -222,7 +222,7 @@ void PlayBarUI::incrementPlayCount()
     plays++;
     if (f.open(QIODevice::WriteOnly)) { QDataStream out(&f); out << plays; f.close(); }
 
-    // 🔹 Guardar total de canciones escuchadas
+    // Guardar total de canciones escuchadas
     QString totalFile = userDir + "/totalsongs.dat";
     int totalSongs = 0;
     QFile f2(totalFile);
@@ -230,7 +230,7 @@ void PlayBarUI::incrementPlayCount()
     totalSongs++;
     if (f2.open(QIODevice::WriteOnly)) { QDataStream out(&f2); out << totalSongs; f2.close(); }
 
-    // 🔹 Guardar tiempo total escuchado
+    //  Guardar tiempo total escuchado
     QString timeFile = userDir + "/totaltime.dat";
     qint64 totalTime = 0;
     QFile f3(timeFile);
@@ -286,6 +286,17 @@ int PlayBarUI::getTotalSongsListened(const QString &username) {
     if (f.open(QIODevice::ReadOnly)) { QDataStream in(&f); int val; in >> val; f.close(); return val; }
     return 0;
 }
+void PlayBarUI::nextSong()
+{
+    if (currentNode && currentNode->next) {
+        currentNode = currentNode->next;
+        setSongInfo(currentNode->cover, currentNode->title, currentNode->artist, currentNode->audioPath);
+        play();
+    } else {
+        qDebug() << "⚠️ No hay siguiente canción.";
+    }
+}
+
 
 qint64 PlayBarUI::getTotalListeningTime(const QString &username) {
     QFile f(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/totaltime.dat").arg(username));
