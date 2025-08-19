@@ -4,59 +4,65 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QPushButton>
 #include <QListWidget>
+#include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
-#include <QMenu>
-#include <QHash>
-
+#include <QMap>
 #include "songdata.h"
 #include "songcardwidget.h"
 #include "artistcardwidget.h"
 #include "playbarui.h"
+#include "playlistdisplayui.h"
 
-class UserMenuUI : public QWidget
-{
+class UserMenuUI : public QWidget {
     Q_OBJECT
 public:
     explicit UserMenuUI(const QString &profilePicPath, const QString &username, QWidget *parent = nullptr);
-    ~UserMenuUI();
 
 private slots:
     void onAddPlaylistClicked();
     void onProfilePicClicked();
     void handleCardToggled(SongCardWidget* card, bool nowSelected);
     void handlePlayButtonPressed(SongCardWidget* card);
+    void restoreMainView();
+    void showPlaylistUI(const QString &playlistName);
+    void showUserProfileUI();
+    void showAlbumUI(const QString &albumName,
+                     const QString &coverPath,
+                     const QString &artistName);
 
 private:
-    // Datos del usuario
+    void loadPlaylists();
+
     QString username;
     QString profilePicPath;
 
-    // Layouts y widgets
+    QHBoxLayout *mainLayout;
     QVBoxLayout *sidebarLayout;
     QVBoxLayout *mainPanelLayout;
     QHBoxLayout *topBarLayout;
-    QHBoxLayout *mainLayout;
-    QHBoxLayout *cardsLayout;
-
-    QPushButton *addPlaylistButton;
-    QPushButton *trendingButton;
-    QPushButton *profilePicButton;
 
     QListWidget *playlistList;
-    QLineEdit *searchBar;
-    QLabel *homeIconLabel;
+    QPushButton *addPlaylistButton;
+    QPushButton *trendingButton;
+    QPushButton *rateSongsButton;
+    QPushButton *homeButton;
+    QPushButton *profilePicButton;
+    QLineEdit   *searchBar;
 
-    // Canciones y artistas
+    QWidget *originalContentWidget;
+    QWidget *currentViewWidget;
+
+    PlayBarUI *playBar;
+
+    QHBoxLayout *cardsLayout;
     QList<SongCardWidget*> songCards;
     QList<ArtistCardWidget*> artistCards;
-    QHash<QString, SongData> songHash;
 
-    // Reproducción
-    SongCardWidget *currentSelectedCard = nullptr;
-    PlayBarUI *playBar;
+    SongCardWidget* currentSelectedCard = nullptr;
+
+    QMap<QString, SongData> songHash;
 };
 
 #endif // USERMENUUI_H
