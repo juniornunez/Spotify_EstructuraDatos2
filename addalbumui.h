@@ -15,6 +15,7 @@ public:
 signals:
     void albumAdded(const QList<SongData>& songs);
     void songAdded(const SongData& song);
+    void albumUploaded();
 
 private slots:
     void onSelectAlbumCoverClicked();

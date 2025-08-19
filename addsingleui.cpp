@@ -145,6 +145,7 @@ void AddSingleUI::onCreateSongClicked() {
     emit songAdded(data);
 
     QMessageBox::information(this, "Success", "Song uploaded successfully!");
+    emit singleUploaded();
     resetForm();
 }
 

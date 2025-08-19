@@ -17,7 +17,7 @@ public:
 
 signals:
     void songAdded(const SongData& data);
-
+    void singleUploaded();
 private slots:
     void onSelectCoverClicked();
     void onSelectAudioClicked();

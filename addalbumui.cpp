@@ -149,6 +149,7 @@ void AddAlbumUI::onCreateAlbumClicked() {
 
     emit albumAdded(songs);
     QMessageBox::information(this, "Éxito", "Álbum subido correctamente.");
+    emit albumUploaded();
     close();
 }
 

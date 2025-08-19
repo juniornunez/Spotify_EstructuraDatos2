@@ -211,6 +211,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     cardsScroll->setFixedHeight(270);
     originalLayout->addWidget(cardsScroll);
 
+
     // Cargar canciones usando hash
     QDir singlesDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
     QStringList subdirs = singlesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -228,7 +229,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
                 f.close();
 
                 song.setFilePath(datosPath);
-                songHash.insert(song.getId(), song);
+                songHash.insert(song.getId(), song); // guarda la canción en el hash
 
                 SongCardWidget *card = new SongCardWidget(song.getCoverPath(), song.getTitle(), song.getArtist(), song.getAudioPath());
                 cardsLayout->addWidget(card);
@@ -262,12 +263,18 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     QDir adminDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata");
     QStringList adminFolders = adminDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (const QString &adminName : adminFolders) {
+        // 🚨 Si es el admin logueado, lo saltamos
+        if (adminName == adminUsername)
+            continue;
+
         QDir artistFolder(adminDir.absoluteFilePath(adminName));
         QStringList images = artistFolder.entryList(QStringList() << "*.png" << "*.jpg" << "*.jpeg", QDir::Files);
         QString artistPic = images.isEmpty() ? "" : artistFolder.absoluteFilePath(images.first());
+
         ArtistCardWidget *artistCard = new ArtistCardWidget(adminName, artistPic);
         artistCardsLayout->addWidget(artistCard);
         artistCards.append(artistCard);
+
         connect(artistCard, &ArtistCardWidget::doubleClicked, this, [=](const QString &artistUsername){
             if (currentViewWidget != nullptr) {
                 currentViewWidget->setParent(nullptr);
@@ -290,6 +297,8 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
             });
         });
     }
+
+
 
     // PlayBar
     playBar = new PlayBarUI(adminUsername, isAdmin, this);
@@ -389,6 +398,18 @@ void AdminMenuUI::onArtistSettingsClicked() {
     ArtistSettingsUI *settingsWindow = new ArtistSettingsUI(adminUsername, this);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose);
 
+    // 🔗 Conectar cuando suba un single
+    connect(settingsWindow, &ArtistSettingsUI::songUploaded, this, [this](const SongData &song) {
+        qDebug() << "🎵 Single subido:" << song.getTitle();
+        restoreMainView();  // 👈 refresca panel
+    });
+
+    // 🔗 Conectar cuando suba un álbum
+    connect(settingsWindow, &ArtistSettingsUI::albumUploaded, this, [this](const QList<SongData> &songs) {
+        qDebug() << "💿 Álbum subido con" << songs.size() << "canciones";
+        restoreMainView();  // 👈 refresca panel
+    });
+
     connect(settingsWindow, &ArtistSettingsUI::manageSongsRequested, this, [this]() {
         if (currentViewWidget != nullptr) {
             currentViewWidget->setParent(nullptr);
@@ -400,6 +421,8 @@ void AdminMenuUI::onArtistSettingsClicked() {
 
     settingsWindow->show();
 }
+
+
 
 void AdminMenuUI::onProfilePicClicked() {
     QMenu *menu = new QMenu(this);
