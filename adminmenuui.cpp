@@ -17,6 +17,7 @@
 #include "managesongsui.h"
 #include "playlistdisplayui.h"
 #include "albumcardwidget.h"
+#include "trendingui.h"
 
 AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
     : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
@@ -77,11 +78,16 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
         "QPushButton:hover { background-color: #282828; color: #fff; }"
         );
     sidebarLayout->addWidget(trendingButton);
-    connect(trendingButton, &QPushButton::clicked, this, [this]() {
-        TrendingUI *trendWin = new TrendingUI(this);
-        trendWin->setAttribute(Qt::WA_DeleteOnClose);
-        trendWin->show();
+    connect(trendingButton, &QPushButton::clicked, this, [this, adminUsername]() {
+        if (currentViewWidget != nullptr) {
+            currentViewWidget->setParent(nullptr); // elimina vista anterior
+        }
+
+        TrendingUI *trendingUI = new TrendingUI(adminUsername, this);
+        mainPanelLayout->addWidget(trendingUI);
+        currentViewWidget = trendingUI;
     });
+
 
     // Botón Rate Songs
     rateSongsButton = new QPushButton("Rate Songs");

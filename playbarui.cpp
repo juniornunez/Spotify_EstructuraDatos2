@@ -8,6 +8,9 @@
 #include <QMouseEvent>
 #include <QComboBox>
 #include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QDataStream>
 
 PlayBarUI::PlayBarUI(QWidget *parent)
     : QWidget(parent)
@@ -59,7 +62,7 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     repeatModeBox->addItem("Repetir 1 canción", RepeatOne);
     repeatModeBox->addItem("Reproducir una vez", PlayOnce);
     repeatModeBox->addItem("Siguiente canción", PlayNext);
-    repeatModeBox->setCurrentIndex(2); // Default = "Siguiente canción"
+    repeatModeBox->setCurrentIndex(2); // Default
     repeatModeBox->setStyleSheet(
         "QComboBox { background-color: #222; color: white; border-radius: 8px; padding: 4px 8px; }"
         "QComboBox::drop-down { border: none; }"
@@ -78,7 +81,7 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     controlsLayout->addWidget(prevButton);
     controlsLayout->addWidget(playPauseButton);
     controlsLayout->addWidget(nextButton);
-    controlsLayout->addWidget(repeatModeBox); // ✅ añadimos el combo
+    controlsLayout->addWidget(repeatModeBox);
 
     // --- Bottom: progress bar
     timeLabelLeft = new QLabel("0:00", this);
@@ -132,21 +135,24 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     // 📌 Manejo del fin de canción
     connect(player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
         if (status == QMediaPlayer::EndOfMedia) {
+            alreadyCounted = false; // ✅ reset al terminar
             if (repeatMode == RepeatOne) {
                 player->setPosition(0);
                 player->play();
             } else if (repeatMode == PlayOnce) {
-                // No hace nada, solo para y queda ahí
                 isPlaying = false;
                 playPauseButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/playimage.png"));
             } else if (repeatMode == PlayNext) {
-                emit requestNextSong(); // 🚀 Avisamos a PlaylistDisplayUI
+                emit requestNextSong();
             }
         }
     });
 }
 
-void PlayBarUI::setSongInfo(const QString &coverPath, const QString &title, const QString &artist, const QString &audioPath)
+void PlayBarUI::setSongInfo(const QString &coverPath,
+                            const QString &title,
+                            const QString &artist,
+                            const QString &audioPath)
 {
     QPixmap pix(coverPath);
     if (!pix.isNull()) {
@@ -158,7 +164,12 @@ void PlayBarUI::setSongInfo(const QString &coverPath, const QString &title, cons
     }
     titleLabel->setText(title);
     artistLabel->setText(artist);
+
     currentAudioPath = audioPath;
+    currentSongTitle = title;   // ✅ ahora usamos el título como identificador
+    currentArtist = artist;
+    alreadyCounted = false;
+
     player->setSource(QUrl::fromLocalFile(audioPath));
     player->stop();
     playPauseButton->setIcon(QIcon("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/assets/playimage.png"));
@@ -187,6 +198,39 @@ void PlayBarUI::onPositionChanged(qint64 position)
     if (player->duration() > 0 && !progressBar->isSliderDown()) {
         progressBar->setValue(static_cast<int>(position / 1000));
     }
+
+    // ✅ contar play si pasan 5 segundos
+    if (position > 5000 && !alreadyCounted) {
+        incrementPlayCount();
+        alreadyCounted = true;
+    }
+}
+
+void PlayBarUI::incrementPlayCount()
+{
+    QString dirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/songsplays/%2")
+    .arg(currentArtist, currentSongTitle);
+    QDir().mkpath(dirPath);
+
+    QString filePath = dirPath + "/plays.dat";
+    QFile f(filePath);
+    int plays = 0;
+
+    if (f.open(QIODevice::ReadOnly)) {
+        QDataStream in(&f);
+        in >> plays;
+        f.close();
+    }
+
+    plays++;
+
+    if (f.open(QIODevice::WriteOnly)) {
+        QDataStream out(&f);
+        out << plays;
+        f.close();
+    }
+
+    qDebug() << "Play count actualizado:" << currentArtist << "-" << currentSongTitle << "->" << plays;
 }
 
 void PlayBarUI::play()
@@ -221,4 +265,3 @@ void PlayBarUI::onSliderReleased()
 {
     player->setPosition(progressBar->value() * 1000);
 }
-

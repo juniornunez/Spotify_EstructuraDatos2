@@ -1,6 +1,6 @@
 QT += core widgets
 QT += multimedia
-
+QT += charts
 CONFIG += c++17
 
 SOURCES += \

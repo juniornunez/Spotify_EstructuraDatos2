@@ -4,10 +4,8 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QScrollArea>
-#include <QLabel>
-#include <QDir>
-#include <QFile>
-#include <QPushButton>
+#include <QLineEdit>
+#include <QHash>
 #include "songdata.h"
 #include "horizontalsongcard.h"
 
@@ -20,6 +18,14 @@ public:
 private:
     QString username;
     QVBoxLayout *mainLayout;
+    QLineEdit *searchBar;
+    QScrollArea *scroll;
+    QWidget *container;
+    QVBoxLayout *songsLayout;
+
+    // 🔑 Hash para canciones y widgets
+    QHash<QString, SongData> songHash;       // songId -> SongData
+    QHash<QString, QWidget*> rowHash;        // songId -> fila QWidget
 
     void loadSongs();
     void saveSongRating(const QString &songId, int rating);

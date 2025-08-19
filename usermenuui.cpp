@@ -67,7 +67,7 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, Q
         );
     sidebarLayout->addWidget(trendingButton);
     connect(trendingButton, &QPushButton::clicked, this, [this]() {
-        TrendingUI *trendWin = new TrendingUI(this);
+        TrendingUI *trendWin = new TrendingUI(" ",this);
         trendWin->setAttribute(Qt::WA_DeleteOnClose);
         trendWin->show();
     });

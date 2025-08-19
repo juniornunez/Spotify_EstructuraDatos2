@@ -15,14 +15,17 @@ class PlayBarUI : public QWidget
 
 public:
     explicit PlayBarUI(QWidget *parent = nullptr);
+
+    // ✅ Guardamos plays en admindata/<artist>/songsplays/<title>/plays.dat
     void setSongInfo(const QString &coverPath,
                      const QString &title,
                      const QString &artist,
                      const QString &audioPath);
+
     void play();
 
 signals:
-    void requestNextSong();  // 🚀 Para que AdminMenuUI/PlaylistDisplayUI puedan reaccionar al "Siguiente canción"
+    void requestNextSong();
 
 private slots:
     void onPlayPauseClicked();
@@ -43,15 +46,19 @@ private:
     QSlider *progressBar;
     QAudioOutput *audioOutput;
     QMediaPlayer *player;
-    QString currentAudioPath;
-    bool isPlaying = false;
-
-    // 🔁 Modos de repetición
-    enum RepeatMode { RepeatOne, PlayOnce, PlayNext };
-    RepeatMode repeatMode = PlayNext;  // Default: siguiente canción
     QComboBox *repeatModeBox;
 
+    QString currentAudioPath;
+    QString currentSongTitle;   // ✅ título como "ID"
+    QString currentArtist;      // ✅ carpeta de artista
+    bool isPlaying = false;
+    bool alreadyCounted = false; // ✅ controla conteo de reproducciones
+
+    enum RepeatMode { RepeatOne, PlayOnce, PlayNext };
+    RepeatMode repeatMode = PlayNext;
+
     QString formatTime(qint64 ms);
+    void incrementPlayCount(); // ✅ cuenta reproducciones en admindata
 };
 
 #endif // PLAYBARUI_H

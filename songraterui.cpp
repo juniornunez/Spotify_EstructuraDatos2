@@ -1,7 +1,9 @@
 #include "songraterui.h"
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QMessageBox>
-#include <QFileInfo>
+#include <QFile>
+#include <QDir>
 
 // Constructor
 SongRaterUI::SongRaterUI(const QString &username, QWidget *parent)
@@ -13,6 +15,16 @@ SongRaterUI::SongRaterUI(const QString &username, QWidget *parent)
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(10);
 
+    // 🔎 Barra de búsqueda
+    searchBar = new QLineEdit;
+    searchBar->setPlaceholderText("Search songs...");
+    searchBar->setStyleSheet(
+        "QLineEdit { background-color: #222; color: white; border: none; "
+        "padding: 10px 18px; border-radius: 18px; font-size: 14pt; min-width:300px; }"
+        );
+    mainLayout->addWidget(searchBar);
+
+    // Título
     QLabel *title = new QLabel("Rate Songs ⭐");
     QFont titleFont = title->font();
     titleFont.setPointSize(20);
@@ -20,19 +32,34 @@ SongRaterUI::SongRaterUI(const QString &username, QWidget *parent)
     title->setFont(titleFont);
     mainLayout->addWidget(title);
 
+    // 📌 Scroll con canciones
+    scroll = new QScrollArea;
+    scroll->setWidgetResizable(true);
+    container = new QWidget;
+    songsLayout = new QVBoxLayout(container);
+    songsLayout->setSpacing(10);
+    container->setLayout(songsLayout);
+    scroll->setWidget(container);
+
+    mainLayout->addWidget(scroll);
+
     loadSongs();
+
+    // 👀 Conectar búsqueda (igual que en AdminMenuUI)
+    connect(searchBar, &QLineEdit::textChanged, this, [this](const QString &text) {
+        QString query = text.trimmed().toLower();
+
+        for (auto it = songHash.begin(); it != songHash.end(); ++it) {
+            QString title = it.value().getTitle().toLower();
+            QString artist = it.value().getArtist().toLower();
+            QWidget *row = rowHash[it.key()];
+            row->setVisible(query.isEmpty() || title.contains(query) || artist.contains(query));
+        }
+    });
 }
 
 void SongRaterUI::loadSongs()
 {
-    // Scroll
-    QScrollArea *scroll = new QScrollArea;
-    scroll->setWidgetResizable(true);
-    QWidget *container = new QWidget;
-    QVBoxLayout *songsLayout = new QVBoxLayout(container);
-    songsLayout->setSpacing(10);
-
-    // Cargar todas las canciones de globalsongs
     QDir songsDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
     QStringList subdirs = songsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
@@ -47,6 +74,9 @@ void SongRaterUI::loadSongs()
         QDataStream in(&f);
         in.setVersion(QDataStream::Qt_5_15);
         SongData song; in >> song; f.close();
+
+        // Guardamos en hash
+        songHash.insert(song.getId(), song);
 
         QWidget *rowWidget = new QWidget;
         QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
@@ -64,7 +94,7 @@ void SongRaterUI::loadSongs()
         starsLayout->setContentsMargins(0, 0, 0, 0);
         starsLayout->setSpacing(3);
 
-        auto *stars = new QVector<QPushButton*>(); // 👈 ahora persiste
+        auto *stars = new QVector<QPushButton*>();
         int currentRating = loadSongRating(song.getId());
 
         for (int i = 1; i <= 5; i++) {
@@ -77,7 +107,6 @@ void SongRaterUI::loadSongs()
 
             connect(star, &QPushButton::clicked, this, [this, song, i, stars]() {
                 saveSongRating(song.getId(), i);
-                // actualizar colores
                 for (int j = 0; j < stars->size(); j++) {
                     (*stars)[j]->setStyleSheet(
                         QString("QPushButton { font-size:18px; border:none; color:%1; }")
@@ -109,11 +138,10 @@ void SongRaterUI::loadSongs()
 
         rowLayout->addWidget(deleteBtn);
         songsLayout->addWidget(rowWidget);
-    }
 
-    container->setLayout(songsLayout);
-    scroll->setWidget(container);
-    mainLayout->addWidget(scroll);
+        // 👉 Guardamos la fila en hash
+        rowHash.insert(song.getId(), rowWidget);
+    }
 }
 
 // 🔹 Guardar rating
@@ -155,3 +183,4 @@ void SongRaterUI::deleteSongRating(const QString &songId)
     .arg(username, songId);
     QFile::remove(filePath);
 }
+
