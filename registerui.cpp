@@ -196,7 +196,8 @@ void RegisterUI::onCreateAccountClicked()
 
     // --- ABRIR MENU DE USUARIO DIRECTAMENTE ---
     QString profilePicPath = usersBasePath + "/" + username + "/profile" + imgInfo.suffix().prepend(".");
-    UserMenuUI *userMenu = new UserMenuUI(profilePicPath,username);
+    UserMenuUI *userMenu = new UserMenuUI(profilePicPath, username, false);
+
     userMenu->show();
     this->close();
 }

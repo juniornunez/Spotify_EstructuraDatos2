@@ -12,8 +12,8 @@
 #include <QFile>
 #include <QDataStream>
 
-PlayBarUI::PlayBarUI(const QString &username, QWidget *parent)
-    : QWidget(parent), currentUser(username)
+PlayBarUI::PlayBarUI(const QString &username,bool isAdmin, QWidget *parent)
+    : QWidget(parent), currentUser(username),isAdmin(isAdmin)
 {
     setFixedHeight(88);
     setStyleSheet("background: #181818; border-top: 1px solid #111;");
@@ -203,10 +203,15 @@ void PlayBarUI::onPositionChanged(qint64 position)
         alreadyCounted = true;
     }
 }
-
 void PlayBarUI::incrementPlayCount()
 {
-    QString userDir = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1").arg(currentUser);
+    QString basePath;
+    if (isAdmin)
+        basePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/";
+    else
+        basePath = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/";
+
+    QString userDir = basePath + currentUser;
     QDir().mkpath(userDir + "/songsplays");
 
     // 🔹 Guardar plays individuales de la canción (por título)
@@ -236,6 +241,8 @@ void PlayBarUI::incrementPlayCount()
     qDebug() << "Play actualizado:" << currentSongTitle << "->" << plays
              << " | Tiempo total:" << totalTime;
 }
+
+
 
 
 void PlayBarUI::play()

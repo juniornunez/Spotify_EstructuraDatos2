@@ -17,7 +17,7 @@ class PlayBarUI : public QWidget
 public:
     enum RepeatMode { RepeatOne, PlayOnce, PlayNext };
 
-    explicit PlayBarUI(const QString &username, QWidget *parent = nullptr);
+    explicit PlayBarUI(const QString &username,bool isAdmin, QWidget *parent = nullptr);
 
     void setSongInfo(const QString &coverPath,
                      const QString &title,
@@ -44,7 +44,7 @@ private slots:
 private:
     void incrementPlayCount();
     QString formatTime(qint64 ms);
-
+    bool isAdmin;
     // 🎵 Datos UI
     QLabel *coverLabel;
     QLabel *titleLabel;

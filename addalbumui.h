@@ -4,45 +4,37 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QTabWidget>
-#include <QComboBox>
-#include <QTextEdit>
+#include <QTableWidget>
 #include "songdata.h"
 
-class AddAlbumUI : public QWidget
-{
+class AddAlbumUI : public QWidget {
     Q_OBJECT
-
 public:
     explicit AddAlbumUI(const QString& adminUsername, QWidget *parent = nullptr);
 
 signals:
-    void songAdded(const SongData& song);
     void albumAdded(const QList<SongData>& songs);
+    void songAdded(const SongData& song);
 
 private slots:
-    void onContinueClicked();
     void onSelectAlbumCoverClicked();
-    void onSelectAudioClicked(QWidget *tab);
+    void onSelectSongsClicked();
     void onCreateAlbumClicked();
 
 private:
-    QWidget* createSongTab(int trackNumber);
-    bool validateSongTab(QWidget *tab);
-    QString copyFileTo(const QString& sourcePath, const QString& destDir);
-    void saveSongData(const QString& dir, const SongData& data);
-
     QString adminUsername;
     QString albumName;
-    QString albumCoverPath;  // Carátula única del álbum
-    int songCount;
+    QString albumCoverPath;
 
     QLineEdit *albumNameEdit;
-    QLineEdit *songCountEdit;
     QLineEdit *albumCoverPathEdit;
-    QPushButton *continueButton;
+    QPushButton *selectAlbumCoverButton;
+    QPushButton *selectSongsButton;
     QPushButton *uploadAlbumButton;
-    QTabWidget *tabWidget;
+    QTableWidget *songsTable;
+
+    QString copyFileTo(const QString& sourcePath, const QString& destDir);
+    void saveSongData(const QString& dir, const SongData& data);
 };
 
 #endif // ADDALBUMUI_H

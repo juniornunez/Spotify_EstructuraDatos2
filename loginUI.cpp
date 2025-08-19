@@ -179,11 +179,10 @@ void LoginUI::onLoginButtonClicked()
     // Login exitoso
     QMessageBox::information(this, "Login exitoso", "Bienvenido, " + username);
 
-    // Abre el menú principal y pasa el tipo de usuario
     if (isAdmin)
-        (new AdminMenuUI(profilePicPath, username))->show();
+        (new AdminMenuUI(profilePicPath, username, true))->show();
     else
-        (new UserMenuUI(profilePicPath,username))->show();
+        (new UserMenuUI(profilePicPath, username, false))->show();
 
 
     this->close();

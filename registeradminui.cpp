@@ -273,7 +273,7 @@ void RegisterAdminUI::onCreateAdminClicked()
 
     // --- ABRIR MENU DE ADMIN DIRECTAMENTE ---
     QString profilePicPath = adminsBasePath + "/" + username + "/profile" + imgInfo.suffix().prepend(".");
-    AdminMenuUI *adminMenu = new AdminMenuUI(profilePicPath, username); // <-- AQUI PASA EL USERNAME
+    AdminMenuUI *adminMenu = new AdminMenuUI(profilePicPath, username, true);
     adminMenu->show();
     this->close();
 

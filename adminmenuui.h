@@ -28,7 +28,7 @@ public slots:
 
 
 public:
-    explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent = nullptr);
+    explicit AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, bool isAdmin, QWidget *parent = nullptr);
     void restoreMainView();
 
 private slots:
@@ -45,7 +45,7 @@ private slots:
 private:
     QString adminUsername;
     QString profilePicPath;
-
+    bool isAdmin;
     QHBoxLayout *mainLayout;
     QVBoxLayout *sidebarLayout;
     QVBoxLayout *mainPanelLayout;

@@ -18,7 +18,7 @@
 class UserMenuUI : public QWidget {
     Q_OBJECT
 public:
-    explicit UserMenuUI(const QString &profilePicPath, const QString &username, QWidget *parent = nullptr);
+    explicit UserMenuUI(const QString &profilePicPath, const QString &username, bool isAdmin, QWidget *parent = nullptr);
 
 private slots:
     void onAddPlaylistClicked();
@@ -34,7 +34,7 @@ private slots:
 
 private:
     void loadPlaylists();
-
+    bool isAdmin;
     QString username;
     QString profilePicPath;
 

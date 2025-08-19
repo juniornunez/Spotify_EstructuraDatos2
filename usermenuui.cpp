@@ -18,8 +18,8 @@
 #include <QMessageBox>
 #include <QMenu>
 
-UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, QWidget *parent)
-    : QWidget(parent), username(username), profilePicPath(profilePicPath), currentViewWidget(nullptr)
+UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, bool isAdmin,QWidget *parent)
+    : QWidget(parent), username(username), profilePicPath(profilePicPath),isAdmin(isAdmin), currentViewWidget(nullptr)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -69,7 +69,7 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, Q
     });
 
     // Botón Trending
-    trendingButton = new QPushButton("Trending");
+    trendingButton = new QPushButton("Stadistics");
     trendingButton->setStyleSheet(
         "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
         "QPushButton:hover { background-color: #282828; color: #fff; }"
@@ -267,7 +267,7 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, Q
     }
 
     // PlayBar
-    playBar = new PlayBarUI(username, this);
+    playBar = new PlayBarUI(username, isAdmin, this);
     playBar->setVisible(false);
 
     mainPanelLayout->addWidget(originalContentWidget);

@@ -19,8 +19,8 @@
 #include "albumcardwidget.h"
 #include "trendingui.h"
 
-AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, QWidget *parent)
-    : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), currentViewWidget(nullptr)
+AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUsername, bool isAdmin, QWidget *parent)
+    : QWidget(parent), adminUsername(adminUsername), profilePicPath(profilePicPath), isAdmin(isAdmin),currentViewWidget(nullptr)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
@@ -72,7 +72,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     });
 
     // Botón Trending
-    trendingButton = new QPushButton("Trending");
+    trendingButton = new QPushButton("Stadistics");
     trendingButton->setStyleSheet(
         "QPushButton { background-color: #222; color: #1ED760; font-size: 13pt; border-radius: 16px; padding: 8px 0; font-weight: bold; }"
         "QPushButton:hover { background-color: #282828; color: #fff; }"
@@ -292,7 +292,7 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     }
 
     // PlayBar
-    playBar = new PlayBarUI(adminUsername, this);
+    playBar = new PlayBarUI(adminUsername, isAdmin, this);
 
     playBar->setVisible(false);
 

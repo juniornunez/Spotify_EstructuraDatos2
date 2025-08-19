@@ -7,159 +7,80 @@
 #include <QDateTime>
 #include <QUuid>
 #include <QFileInfo>
-#include <QIntValidator>
+#include <QTableWidgetItem>
 #include "adminmenuui.h"
+#include <QHeaderView>
 
 AddAlbumUI::AddAlbumUI(const QString& adminUsername, QWidget *parent)
-    : QWidget(parent), adminUsername(adminUsername), songCount(0)
+    : QWidget(parent), adminUsername(adminUsername)
 {
     setStyleSheet("background-color: #191414; color: white;");
 
-    // Paso inicial: datos del álbum
     QLabel *albumNameLabel = new QLabel("Nombre del álbum:");
     albumNameEdit = new QLineEdit;
     albumNameEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px; padding: 6px;");
 
-    QLabel *songCountLabel = new QLabel("Cantidad de canciones:");
-    songCountEdit = new QLineEdit;
-    songCountEdit->setValidator(new QIntValidator(1, 50, this));
-    songCountEdit->setStyleSheet("background: #121212; color: white; border-radius: 5px; padding: 6px;");
-
     QLabel *albumCoverLabel = new QLabel("Carátula del álbum:");
     albumCoverPathEdit = new QLineEdit;
     albumCoverPathEdit->setReadOnly(true);
-    QPushButton *selectAlbumCoverButton = new QPushButton("Seleccionar imagen");
+    selectAlbumCoverButton = new QPushButton("Seleccionar imagen");
     connect(selectAlbumCoverButton, &QPushButton::clicked, this, &AddAlbumUI::onSelectAlbumCoverClicked);
 
     QHBoxLayout *coverLayout = new QHBoxLayout;
     coverLayout->addWidget(albumCoverPathEdit);
     coverLayout->addWidget(selectAlbumCoverButton);
 
-    continueButton = new QPushButton("Continuar");
-    continueButton->setStyleSheet("background-color: #1ED760; color: black; font-weight: bold; border-radius: 20px; padding: 8px 16px;");
-    connect(continueButton, &QPushButton::clicked, this, &AddAlbumUI::onContinueClicked);
+    selectSongsButton = new QPushButton("Seleccionar canciones");
+    connect(selectSongsButton, &QPushButton::clicked, this, &AddAlbumUI::onSelectSongsClicked);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(albumNameLabel);
-    mainLayout->addWidget(albumNameEdit);
-    mainLayout->addWidget(songCountLabel);
-    mainLayout->addWidget(songCountEdit);
-    mainLayout->addWidget(albumCoverLabel);
-    mainLayout->addLayout(coverLayout);
-    mainLayout->addWidget(continueButton, 0, Qt::AlignCenter);
-
-    setLayout(mainLayout);
-    setFixedSize(450, 350);
-    setWindowTitle("Crear Álbum");
-}
-
-void AddAlbumUI::onSelectAlbumCoverClicked()
-{
-    QString file = QFileDialog::getOpenFileName(this, "Seleccionar imagen del álbum", "", "Images (*.png *.jpg *.jpeg *.bmp)");
-    if (!file.isEmpty()) {
-        albumCoverPathEdit->setText(file);
-    }
-}
-
-void AddAlbumUI::onContinueClicked()
-{
-    albumName = albumNameEdit->text().trimmed();
-    songCount = songCountEdit->text().toInt();
-    albumCoverPath = albumCoverPathEdit->text();
-
-    if (albumName.isEmpty() || songCount <= 0 || albumCoverPath.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Por favor completa todos los campos y selecciona la carátula.");
-        return;
-    }
-
-    // Crear interfaz de pestañas
-    QVBoxLayout *newLayout = new QVBoxLayout;
-    tabWidget = new QTabWidget;
-
-    for (int i = 1; i <= songCount; i++) {
-        tabWidget->addTab(createSongTab(i), QString("Canción %1").arg(i));
-    }
+    songsTable = new QTableWidget;
+    songsTable->setColumnCount(2);
+    songsTable->setHorizontalHeaderLabels({"Incluir", "Archivo"});
+    songsTable->horizontalHeader()->setStretchLastSection(true);
 
     uploadAlbumButton = new QPushButton("Subir Álbum");
     uploadAlbumButton->setStyleSheet("background-color: #1ED760; color: black; font-weight: bold; border-radius: 20px; padding: 8px 16px;");
     connect(uploadAlbumButton, &QPushButton::clicked, this, &AddAlbumUI::onCreateAlbumClicked);
 
-    newLayout->addWidget(tabWidget);
-    newLayout->addWidget(uploadAlbumButton, 0, Qt::AlignCenter);
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addWidget(albumNameLabel);
+    mainLayout->addWidget(albumNameEdit);
+    mainLayout->addWidget(albumCoverLabel);
+    mainLayout->addLayout(coverLayout);
+    mainLayout->addWidget(selectSongsButton);
+    mainLayout->addWidget(songsTable);
+    mainLayout->addWidget(uploadAlbumButton, 0, Qt::AlignCenter);
 
-    QLayout *oldLayout = this->layout();
-    if (oldLayout) {
-        QLayoutItem *item;
-        while ((item = oldLayout->takeAt(0)) != nullptr) {
-            delete item->widget();
-            delete item;
-        }
-        delete oldLayout;
-    }
-
-    setLayout(newLayout);
-    setFixedSize(600, 700);
+    setLayout(mainLayout);
+    setFixedSize(600, 500);
+    setWindowTitle("Crear Álbum");
 }
 
-QWidget* AddAlbumUI::createSongTab(int trackNumber)
-{
-    QWidget *tab = new QWidget;
-    QVBoxLayout *layout = new QVBoxLayout(tab);
-
-    QLabel *titleLabel = new QLabel("Título:");
-    QLineEdit *titleEdit = new QLineEdit;
-    titleEdit->setObjectName("titleEdit");
-
-    QLabel *genreLabel = new QLabel("Género:");
-    QComboBox *genreCombo = new QComboBox;
-    genreCombo->addItems({"Pop","Corridos","Cristianos","Electrónica","Reguetón","Rock","Clásicas"});
-    genreCombo->setObjectName("genreCombo");
-
-    QLabel *durationLabel = new QLabel("Duración (mm:ss):");
-    QLineEdit *durationEdit = new QLineEdit;
-    durationEdit->setObjectName("durationEdit");
-
-    QLabel *descLabel = new QLabel("Descripción:");
-    QTextEdit *descEdit = new QTextEdit;
-    descEdit->setObjectName("descEdit");
-
-    QLabel *audioLabel = new QLabel("Archivo de audio:");
-    QLineEdit *audioPathEdit = new QLineEdit;
-    audioPathEdit->setReadOnly(true);
-    audioPathEdit->setObjectName("audioPathEdit");
-    QPushButton *selectAudioButton = new QPushButton("Seleccionar audio");
-    connect(selectAudioButton, &QPushButton::clicked, this, [=]() { onSelectAudioClicked(tab); });
-
-    layout->addWidget(titleLabel); layout->addWidget(titleEdit);
-    layout->addWidget(genreLabel); layout->addWidget(genreCombo);
-    layout->addWidget(durationLabel); layout->addWidget(durationEdit);
-    layout->addWidget(descLabel); layout->addWidget(descEdit);
-
-    QHBoxLayout *audioLayout = new QHBoxLayout;
-    audioLayout->addWidget(audioPathEdit); audioLayout->addWidget(selectAudioButton);
-    layout->addWidget(audioLabel); layout->addLayout(audioLayout);
-
-    return tab;
+void AddAlbumUI::onSelectAlbumCoverClicked() {
+    QString file = QFileDialog::getOpenFileName(this, "Seleccionar imagen del álbum", "", "Images (*.png *.jpg *.jpeg *.bmp)");
+    if (!file.isEmpty()) albumCoverPathEdit->setText(file);
 }
 
-void AddAlbumUI::onSelectAudioClicked(QWidget *tab)
-{
-    QString file = QFileDialog::getOpenFileName(this, "Seleccionar audio", "", "Audio Files (*.mp3 *.wav *.flac)");
-    if (!file.isEmpty()) {
-        tab->findChild<QLineEdit*>("audioPathEdit")->setText(file);
+void AddAlbumUI::onSelectSongsClicked() {
+    QStringList files = QFileDialog::getOpenFileNames(this, "Seleccionar canciones", "", "Audio Files (*.mp3 *.wav *.flac)");
+    if (files.isEmpty()) return;
+
+    songsTable->setRowCount(0);
+    for (const QString &file : files) {
+        int row = songsTable->rowCount();
+        songsTable->insertRow(row);
+
+        QTableWidgetItem *checkItem = new QTableWidgetItem;
+        checkItem->setCheckState(Qt::Checked);
+        songsTable->setItem(row, 0, checkItem);
+
+        QFileInfo info(file);
+        songsTable->setItem(row, 1, new QTableWidgetItem(info.fileName()));
+        songsTable->item(row, 1)->setData(Qt::UserRole, file);
     }
 }
 
-bool AddAlbumUI::validateSongTab(QWidget *tab)
-{
-    return !(tab->findChild<QLineEdit*>("titleEdit")->text().trimmed().isEmpty() ||
-             tab->findChild<QLineEdit*>("durationEdit")->text().trimmed().isEmpty() ||
-             tab->findChild<QTextEdit*>("descEdit")->toPlainText().trimmed().isEmpty() ||
-             tab->findChild<QLineEdit*>("audioPathEdit")->text().isEmpty());
-}
-
-QString AddAlbumUI::copyFileTo(const QString& sourcePath, const QString& destDir)
-{
+QString AddAlbumUI::copyFileTo(const QString& sourcePath, const QString& destDir) {
     QDir().mkpath(destDir);
     QFileInfo fileInfo(sourcePath);
     QString destPath = destDir + "/" + fileInfo.fileName();
@@ -168,8 +89,7 @@ QString AddAlbumUI::copyFileTo(const QString& sourcePath, const QString& destDir
     return destPath;
 }
 
-void AddAlbumUI::saveSongData(const QString& dir, const SongData& data)
-{
+void AddAlbumUI::saveSongData(const QString& dir, const SongData& data) {
     QFile file(dir + "/song.dat");
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);
@@ -179,65 +99,56 @@ void AddAlbumUI::saveSongData(const QString& dir, const SongData& data)
     }
 }
 
-void AddAlbumUI::onCreateAlbumClicked()
-{
-    QList<SongData> songs;
+void AddAlbumUI::onCreateAlbumClicked() {
+    albumName = albumNameEdit->text().trimmed();
+    albumCoverPath = albumCoverPathEdit->text();
 
-    for (int i = 0; i < songCount; i++) {
-        QWidget *tab = tabWidget->widget(i);
-        if (!validateSongTab(tab)) {
-            QMessageBox::warning(this, "Error", QString("Faltan campos en la canción %1").arg(i+1));
-            return;
-        }
+    if (albumName.isEmpty() || albumCoverPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Completa el nombre y la carátula.");
+        return;
+    }
+
+    QList<SongData> songs;
+    for (int row = 0; row < songsTable->rowCount(); row++) {
+        if (songsTable->item(row, 0)->checkState() == Qt::Unchecked) continue;
+
+        QString audioPath = songsTable->item(row, 1)->data(Qt::UserRole).toString();
+        QFileInfo info(audioPath);
 
         QString songID = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        QString songTitle = tab->findChild<QLineEdit*>("titleEdit")->text().trimmed();
-        QString genre = tab->findChild<QComboBox*>("genreCombo")->currentText();
-        QString duration = tab->findChild<QLineEdit*>("durationEdit")->text().trimmed();
-        QString description = tab->findChild<QTextEdit*>("descEdit")->toPlainText().trimmed();
-        QString audioPath = tab->findChild<QLineEdit*>("audioPathEdit")->text();
+        QString title = info.baseName(); // nombre de archivo como título
+        QString genre = "Pop";           // valor default
+        QString duration = "--:--";      // se podría leer con QMediaPlayer
+        QString description = "Canción del álbum";
 
         QString baseDir = "C:/Users/moiza/Documents/QT/Spotify_Proyecto1/";
         QString globalSongDir = baseDir + "globalsongs/" + songID;
         QString adminSongDir = baseDir + "admindata/" + adminUsername + "/artistsongs/" + songID;
 
-        QString coverGlobal = copyFileTo(albumCoverPath, globalSongDir); // misma carátula
+        QString coverGlobal = copyFileTo(albumCoverPath, globalSongDir);
         QString audioGlobal = copyFileTo(audioPath, globalSongDir);
 
         copyFileTo(albumCoverPath, adminSongDir);
         copyFileTo(audioPath, adminSongDir);
 
-        SongData data(songID,
-                      songTitle,
-                      genre,
-                      duration,
-                      description,
-                      coverGlobal,
-                      audioGlobal,
-                      adminUsername,
-                      QDateTime::currentDateTime(),
-                      albumName,
-                      i+1);
+        SongData data(songID, title, genre, duration, description,
+                      coverGlobal, audioGlobal, adminUsername,
+                      QDateTime::currentDateTime(), albumName, row+1);
 
         saveSongData(globalSongDir, data);
         saveSongData(adminSongDir, data);
 
         songs.append(data);
+        emit songAdded(data);
+    }
 
-        emit songAdded(data); // Igual que single
+    if (songs.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Debes seleccionar al menos una canción.");
+        return;
     }
 
     emit albumAdded(songs);
-
-    // 🔹 Refrescar My Top Songs
-    QWidget *p = parentWidget();
-    while (p && !qobject_cast<AdminMenuUI*>(p))
-        p = p->parentWidget();
-
-    if (auto adminMenu = qobject_cast<AdminMenuUI*>(p)) {
-        adminMenu->restoreMainView();
-    }
-
     QMessageBox::information(this, "Éxito", "Álbum subido correctamente.");
     close();
 }
+
