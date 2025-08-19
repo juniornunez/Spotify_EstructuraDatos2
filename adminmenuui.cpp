@@ -292,7 +292,8 @@ AdminMenuUI::AdminMenuUI(const QString &profilePicPath, const QString &adminUser
     }
 
     // PlayBar
-    playBar = new PlayBarUI;
+    playBar = new PlayBarUI(adminUsername, this);
+
     playBar->setVisible(false);
 
     // Agregar contenido original al mainPanelLayout

@@ -8,8 +8,9 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QGroupBox>
+#include <QTime>
 #include <algorithm>
-
+#include "playbarui.h"
 // ---------------- CONSTRUCTOR -----------------
 TrendingUI::TrendingUI(const QString &username, QWidget *parent)
     : QWidget(parent), currentUser(username)
@@ -31,10 +32,11 @@ TrendingUI::TrendingUI(const QString &username, QWidget *parent)
 
     tabs->addTab(createTopRatedSongsTab(), "⭐ Top Rated Songs");
     tabs->addTab(createTopArtistsSongsTab(), "📊 Top Artists/Songs");
-    tabs->addTab(createMyStatsTab(), "📈 My Stats");
+    tabs->addTab(createMyStatsTab(username), "📈 My Stats");
 
     mainLayout->addWidget(tabs);
 }
+
 // ---------------- TAB 1: TOP RATED SONGS -----------------
 QWidget* TrendingUI::createTopRatedSongsTab()
 {
@@ -65,12 +67,6 @@ QWidget* TrendingUI::createTopRatedSongsTab()
     table->verticalHeader()->setVisible(false);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers); // 🚫 No editable
 
-    table->setStyleSheet(
-        "QTableWidget { gridline-color: #333; font-size: 14px; }"
-        "QHeaderView::section { background-color: #222; color: #1ED760; padding: 8px; font-size: 14px; }"
-        "QTableWidget::item { padding: 10px; }"
-        );
-
     table->setRowCount(sorted.size());
 
     int row = 0;
@@ -78,16 +74,8 @@ QWidget* TrendingUI::createTopRatedSongsTab()
         SongData song = loadSongFromId(p.first);
         QString displayName = song.getTitle() + " - " + song.getArtist();
 
-        QTableWidgetItem *nameItem = new QTableWidgetItem(displayName);
-        nameItem->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-        nameItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        QTableWidgetItem *ratingItem = new QTableWidgetItem(QString("⭐ %1").arg(p.second, 0, 'f', 1));
-        ratingItem->setTextAlignment(Qt::AlignCenter);
-        ratingItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        table->setItem(row, 0, nameItem);
-        table->setItem(row, 1, ratingItem);
+        table->setItem(row, 0, new QTableWidgetItem(displayName));
+        table->setItem(row, 1, new QTableWidgetItem(QString("⭐ %1").arg(p.second, 0, 'f', 1)));
         row++;
     }
 
@@ -108,7 +96,6 @@ QWidget* TrendingUI::createTopArtistsSongsTab()
     // ---------------- TABLA DE ARTISTAS ----------------
     QMap<QString,int> artistPlays = getAllArtistPlayCounts();
 
-    // 🔹 Convertir a lista y ordenar por plays (descendente)
     QList<std::pair<QString,int>> sortedArtists;
     for (auto it = artistPlays.begin(); it != artistPlays.end(); ++it)
         sortedArtists.append({it.key(), it.value()});
@@ -118,32 +105,15 @@ QWidget* TrendingUI::createTopArtistsSongsTab()
     QTableWidget *artistTable = new QTableWidget(scrollContent);
     artistTable->setColumnCount(2);
     artistTable->setHorizontalHeaderLabels({ "Artist", "Total Plays" });
-
     artistTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     artistTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    artistTable->verticalHeader()->setDefaultSectionSize(40);
-    artistTable->verticalHeader()->setVisible(false);
-    artistTable->setEditTriggers(QAbstractItemView::NoEditTriggers); // 🚫 No editable
-
-    artistTable->setStyleSheet(
-        "QTableWidget { gridline-color: #333; font-size: 14px; }"
-        "QHeaderView::section { background-color: #222; color: #1ED760; padding: 8px; font-size: 14px; }"
-        "QTableWidget::item { padding: 10px; }"
-        );
+    artistTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     artistTable->setRowCount(sortedArtists.size());
     int row = 0;
     for (auto &p : sortedArtists) {
-        QTableWidgetItem *artistItem = new QTableWidgetItem(p.first);
-        artistItem->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-        artistItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        QTableWidgetItem *playsItem = new QTableWidgetItem(QString::number(p.second));
-        playsItem->setTextAlignment(Qt::AlignCenter);
-        playsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        artistTable->setItem(row, 0, artistItem);
-        artistTable->setItem(row, 1, playsItem);
+        artistTable->setItem(row, 0, new QTableWidgetItem(p.first));
+        artistTable->setItem(row, 1, new QTableWidgetItem(QString::number(p.second)));
         row++;
     }
 
@@ -155,7 +125,6 @@ QWidget* TrendingUI::createTopArtistsSongsTab()
     // ---------------- TABLA DE CANCIONES ----------------
     QMap<QString,int> songPlays = getAllSongPlayCounts();
 
-    // 🔹 Convertir a lista y ordenar por plays (descendente)
     QList<std::pair<QString,int>> sortedSongs;
     for (auto it = songPlays.begin(); it != songPlays.end(); ++it)
         sortedSongs.append({it.key(), it.value()});
@@ -165,32 +134,15 @@ QWidget* TrendingUI::createTopArtistsSongsTab()
     QTableWidget *songTable = new QTableWidget(scrollContent);
     songTable->setColumnCount(2);
     songTable->setHorizontalHeaderLabels({ "Song", "Plays" });
-
     songTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     songTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    songTable->verticalHeader()->setDefaultSectionSize(40);
-    songTable->verticalHeader()->setVisible(false);
-    songTable->setEditTriggers(QAbstractItemView::NoEditTriggers); // 🚫 No editable
-
-    songTable->setStyleSheet(
-        "QTableWidget { gridline-color: #333; font-size: 14px; }"
-        "QHeaderView::section { background-color: #222; color: #1ED760; padding: 8px; font-size: 14px; }"
-        "QTableWidget::item { padding: 10px; }"
-        );
+    songTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     songTable->setRowCount(sortedSongs.size());
     row = 0;
     for (auto &p : sortedSongs) {
-        QTableWidgetItem *songItem = new QTableWidgetItem(p.first);
-        songItem->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-        songItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        QTableWidgetItem *playsItem = new QTableWidgetItem(QString::number(p.second));
-        playsItem->setTextAlignment(Qt::AlignCenter);
-        playsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-        songTable->setItem(row, 0, songItem);
-        songTable->setItem(row, 1, playsItem);
+        songTable->setItem(row, 0, new QTableWidgetItem(p.first));
+        songTable->setItem(row, 1, new QTableWidgetItem(QString::number(p.second)));
         row++;
     }
 
@@ -199,75 +151,116 @@ QWidget* TrendingUI::createTopArtistsSongsTab()
     songLayout->addWidget(songTable);
     scrollLayout->addWidget(songBox);
 
-    // ---------------- SCROLL ----------------
     scroll->setWidget(scrollContent);
     scroll->setWidgetResizable(true);
-
     layout->addWidget(scroll);
     return tab;
 }
 
-
 // ---------------- TAB 3: MY STATS -----------------
-QWidget* TrendingUI::createMyStatsTab()
+QWidget* TrendingUI::createMyStatsTab(const QString &username)
 {
     QWidget *tab = new QWidget;
     QVBoxLayout *layout = new QVBoxLayout(tab);
 
-    QLabel *title = new QLabel("📈 Your Most Played Songs");
-    title->setStyleSheet("font-size: 20px; font-weight: bold; margin-bottom: 15px;");
-    layout->addWidget(title);
+    // --- Total Songs Listened ---
+    int totalSongs = PlayBarUI::getTotalSongsListened(username);
+    QLabel *songsLabel = new QLabel(QString("🎧 Total Songs Listened: %1").arg(totalSongs));
+    songsLabel->setStyleSheet("font-size: 16px; font-weight: bold;");
+    layout->addWidget(songsLabel);
 
-    QTableWidget *table = new QTableWidget(tab);
-    table->setColumnCount(2);
-    table->setHorizontalHeaderLabels({ "Song", "Plays" });
+    // --- Most Listened Songs ---
+    QGroupBox *songsBox = new QGroupBox("🔥 Most Listened Songs");
+    QVBoxLayout *songsLayout = new QVBoxLayout(songsBox);
 
-    table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    table->verticalHeader()->setDefaultSectionSize(40);
-    table->verticalHeader()->setVisible(false);
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers); // 🚫 No editable
+    QMap<QString,int> plays = PlayBarUI::getPersonalSongPlayCounts(username);
 
-    table->setStyleSheet(
-        "QTableWidget { gridline-color: #333; font-size: 14px; }"
-        "QHeaderView::section { background-color: #222; color: #1ED760; padding: 8px; font-size: 14px; }"
-        "QTableWidget::item { padding: 10px; }"
-        );
+    QList<std::pair<QString,int>> sortedPlays;
+    for (auto it = plays.begin(); it != plays.end(); ++it)
+        sortedPlays.append({it.key(), it.value()});
+    std::sort(sortedPlays.begin(), sortedPlays.end(),
+              [](auto &a, auto &b){ return a.second > b.second; });
 
-    QMap<QString,int> songPlays = getAllSongPlayCounts();
-    table->setRowCount(songPlays.size());
+    QTableWidget *songsTable = new QTableWidget;
+    songsTable->setColumnCount(2);
+    songsTable->setHorizontalHeaderLabels({"Song", "Plays"});
+    songsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    songsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    songsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    songsTable->setRowCount(sortedPlays.size());
 
     int row = 0;
-    for (auto it = songPlays.begin(); it != songPlays.end(); ++it) {
-        QTableWidgetItem *songItem = new QTableWidgetItem(it.key());
-        songItem->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-        songItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    for (auto &p : sortedPlays) {
+        SongData song = loadSongFromId(p.first);
 
-        QTableWidgetItem *playsItem = new QTableWidgetItem(QString::number(it.value()));
-        playsItem->setTextAlignment(Qt::AlignCenter);
-        playsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        if (song.getId().isEmpty()) {
+            // ⚠️ no encontró por ID, probamos con título
+            song = loadSongFromTitle(p.first);
+        }
 
-        table->setItem(row, 0, songItem);
-        table->setItem(row, 1, playsItem);
+        QString displayName;
+        if (!song.getTitle().isEmpty())
+            displayName = song.getTitle() + " - " + song.getArtist();
+        else
+            displayName = p.first; // por si acaso
+
+        songsTable->setItem(row, 0, new QTableWidgetItem(displayName));
+        songsTable->setItem(row, 1, new QTableWidgetItem(QString::number(p.second)));
         row++;
     }
 
-    layout->addWidget(table);
+
+    songsLayout->addWidget(songsTable);
+    layout->addWidget(songsBox);
+
+    // --- Average Rating Given ---
+    double avgRating = getAverageRatingGiven(username);
+    QLabel *ratingLabel = new QLabel(QString("⭐ Average Rating Given: %1").arg(avgRating, 0, 'f', 1));
+    ratingLabel->setStyleSheet("font-size: 16px; font-weight: bold;");
+    layout->addWidget(ratingLabel);
+
+    // --- Last Rated Songs ---
+    QGroupBox *lastRatedBox = new QGroupBox("📝 Last Rated Songs");
+    QVBoxLayout *lastRatedLayout = new QVBoxLayout(lastRatedBox);
+
+    QList<QPair<QString, QDateTime>> lastRated = getLastRatedSongs(username, 5);
+
+    QTableWidget *lastRatedTable = new QTableWidget;
+    lastRatedTable->setColumnCount(2);
+    lastRatedTable->setHorizontalHeaderLabels({"Song", "Rated At"});
+    lastRatedTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    lastRatedTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    lastRatedTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    lastRatedTable->setRowCount(lastRated.size());
+
+    row = 0;
+    for (auto &p : lastRated) {
+        SongData song = loadSongFromId(p.first); // ✅ mostrar título+artista
+        QString displayName = song.getTitle() + " - " + song.getArtist();
+
+        lastRatedTable->setItem(row, 0, new QTableWidgetItem(displayName));
+        lastRatedTable->setItem(row, 1,
+                                new QTableWidgetItem(p.second.toString("dd/MM/yyyy hh:mm")));
+        row++;
+    }
+    lastRatedLayout->addWidget(lastRatedTable);
+    layout->addWidget(lastRatedBox);
+
+    layout->addStretch();
     return tab;
 }
 
 
-// ---------------- HELPERS -----------------
+// ---------------- PROMEDIOS (usa ID en lugar de título) ----------------
 QMap<QString, double> TrendingUI::getAllSongAverageRatings()
 {
-    // 🔹 songId -> lista de ratings
     QMap<QString, QList<int>> ratings;
 
     QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs");
     for (QString user : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
         QDir userDir(baseDir.filePath(user));
         for (QString ratingFile : userDir.entryList(QStringList() << "*.dat", QDir::Files)) {
-            QString songId = ratingFile.left(ratingFile.size() - 4); // quitar ".dat"
+            QString songId = QFileInfo(ratingFile).baseName(); // ✅ usar ID
             QFile f(userDir.filePath(ratingFile));
             if (f.open(QIODevice::ReadOnly)) {
                 QDataStream in(&f);
@@ -279,7 +272,6 @@ QMap<QString, double> TrendingUI::getAllSongAverageRatings()
         }
     }
 
-    // 🔹 calcular promedios
     QMap<QString, double> averages;
     for (auto it = ratings.begin(); it != ratings.end(); ++it) {
         double sum = 0;
@@ -290,6 +282,7 @@ QMap<QString, double> TrendingUI::getAllSongAverageRatings()
     return averages;
 }
 
+
 int TrendingUI::getPlayCount(const QString &artist, const QString &song)
 {
     QString filePath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/songsplays/%2/plays.dat")
@@ -297,9 +290,7 @@ int TrendingUI::getPlayCount(const QString &artist, const QString &song)
     QFile f(filePath);
     int plays = 0;
     if (f.open(QIODevice::ReadOnly)) {
-        QDataStream in(&f);
-        in >> plays;
-        f.close();
+        QDataStream in(&f); in >> plays;
     }
     return plays;
 }
@@ -308,11 +299,19 @@ QMap<QString,int> TrendingUI::getAllSongPlayCounts()
 {
     QMap<QString,int> result;
     QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata");
-    for (QString artist : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QDir songsDir(baseDir.filePath(artist + "/songsplays"));
-        for (QString song : songsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            int plays = getPlayCount(artist, song);
-            result.insert(song, plays);
+
+    for (QString user : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QDir playsDir(baseDir.filePath(user + "/songsplays"));
+        QStringList files = playsDir.entryList(QStringList() << "*.dat", QDir::Files);
+
+        for (QString file : files) {
+            QString songTitle = file.left(file.size() - 4); // quitar ".dat"
+            QFile f(playsDir.filePath(file));
+            if (f.open(QIODevice::ReadOnly)) {
+                QDataStream in(&f); int plays; in >> plays;
+                result[songTitle] += plays; // acumulamos plays globales
+                f.close();
+            }
         }
     }
     return result;
@@ -322,35 +321,152 @@ QMap<QString,int> TrendingUI::getAllArtistPlayCounts()
 {
     QMap<QString,int> result;
     QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata");
-    for (QString artist : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QDir songsDir(baseDir.filePath(artist + "/songsplays"));
-        int total = 0;
-        for (QString song : songsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            total += getPlayCount(artist, song);
+
+    for (QString user : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QDir playsDir(baseDir.filePath(user + "/songsplays"));
+        QStringList files = playsDir.entryList(QStringList() << "*.dat", QDir::Files);
+
+        for (QString file : files) {
+            QString songTitle = file.left(file.size() - 4);
+            SongData song = loadSongFromTitle(songTitle);
+            if (!song.getArtist().isEmpty()) {
+                QFile f(playsDir.filePath(file));
+                if (f.open(QIODevice::ReadOnly)) {
+                    QDataStream in(&f); int plays; in >> plays;
+                    result[song.getArtist()] += plays; // acumulamos plays por artista
+                    f.close();
+                }
+            }
         }
-        result.insert(artist, total);
     }
     return result;
 }
 
-// ---------------- HELPERS -----------------
-SongData TrendingUI::loadSongFromId(const QString &songId)
+
+
+
+// ---------------- HELPERS PERSONALES -----------------
+int TrendingUI::getTotalSongsListened(const QString &username)
 {
-    QDir songDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs/" + songId);
-    QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
-    if (datFiles.isEmpty()) return SongData();
+    QDir dir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/%1/plays").arg(username));
+    return dir.exists() ? dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot).size() : 0;
+}
 
-    QFile f(songDir.absoluteFilePath(datFiles.first()));
-    if (!f.open(QIODevice::ReadOnly)) return SongData();
+qint64 TrendingUI::getTotalListeningTime(const QString &username)
+{
+    QString filePath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/%1/total_time.dat").arg(username);
+    QFile f(filePath);
+    qint64 total = 0;
+    if (f.open(QIODevice::ReadOnly)) {
+        QDataStream in(&f); in >> total;
+    }
+    return total;
+}
 
-    QDataStream in(&f);
-    in.setVersion(QDataStream::Qt_5_15);
+QMap<QString,int> TrendingUI::getPersonalSongPlayCounts(const QString &username)
+{
+    QMap<QString,int> plays;
+    QDir dir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/userdata/%1/songsplays").arg(username));
 
-    SongData song;
-    in >> song;
-    f.close();
+    // ✅ iterar carpetas con IDs de canción
+    for (QString songId : dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QFile f(dir.filePath(songId + "/plays.dat"));
+        if (f.open(QIODevice::ReadOnly)) {
+            QDataStream in(&f);
+            int count;
+            in >> count;
+            plays.insert(songId, count); // ✅ usar ID como clave
+        }
+    }
+    return plays;
+}
 
-    return song;
+
+double TrendingUI::getAverageRatingGiven(const QString &username)
+{
+    QDir dir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1").arg(username));
+    QStringList files = dir.entryList(QStringList() << "*.dat", QDir::Files);
+    int total = 0, count = 0;
+    for (QString file : files) {
+        QFile f(dir.filePath(file));
+        if (f.open(QIODevice::ReadOnly)) {
+            QDataStream in(&f); int rating; in >> rating;
+            total += rating; count++;
+        }
+    }
+    return count > 0 ? (double)total / count : 0.0;
+}
+
+QList<QPair<QString, QDateTime>> TrendingUI::getLastRatedSongs(const QString &username, int limit)
+{
+    QList<QPair<QString, QDateTime>> result;
+    QDir userDir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1").arg(username));
+    QStringList files = userDir.entryList(QStringList() << "*.dat", QDir::Files, QDir::Time);
+
+    int count = 0;
+    for (const QString &file : files) {
+        if (count >= limit) break;
+        QString songId = QFileInfo(file).baseName(); // ✅ usar ID
+        QFileInfo info(userDir.filePath(file));
+        result.append({songId, info.lastModified()});
+        count++;
+    }
+
+    return result;
+}
+
+SongData TrendingUI::loadSongFromTitle(const QString &title)
+{
+    QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
+    for (QString folder : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QDir songDir(baseDir.filePath(folder));
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+
+        if (datFiles.isEmpty()) continue;
+
+        QFile f(songDir.absoluteFilePath(datFiles.first()));
+        if (!f.open(QIODevice::ReadOnly)) continue;
+
+        QDataStream in(&f);
+        in.setVersion(QDataStream::Qt_5_15);
+
+        SongData song;
+        in >> song;
+        f.close();
+
+        if (song.getTitle() == title) {
+            return song; // ✅ coincidencia por título
+        }
+    }
+
+    return SongData(); // vacío si no se encontró
+}
+
+SongData TrendingUI::loadSongFromId(const QString &id)
+{
+    QDir baseDir("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/globalsongs");
+    for (QString folder : baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QDir songDir(baseDir.filePath(folder));
+        QStringList datFiles = songDir.entryList(QStringList() << "*.dat", QDir::Files);
+
+        if (datFiles.isEmpty()) continue;
+
+        QFile f(songDir.absoluteFilePath(datFiles.first()));
+        if (!f.open(QIODevice::ReadOnly)) continue;
+
+        QDataStream in(&f);
+        in.setVersion(QDataStream::Qt_5_15);
+
+        SongData song;
+        in >> song;
+        f.close();
+
+        if (song.getId() == id) {
+            return song; // ✅ coincidencia por ID
+        }
+    }
+
+    return SongData(); // vacío si no se encontró
 }
 
 

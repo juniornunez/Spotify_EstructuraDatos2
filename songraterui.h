@@ -3,8 +3,8 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QScrollArea>
 #include <QLineEdit>
+#include <QScrollArea>
 #include <QHash>
 #include "songdata.h"
 #include "horizontalsongcard.h"
@@ -15,22 +15,28 @@ class SongRaterUI : public QWidget
 public:
     explicit SongRaterUI(const QString &username, QWidget *parent = nullptr);
 
+    // 📊 Estadísticas personales
+    double getAverageRatingGiven() const;                      // Promedio de calificaciones dadas
+    QList<QPair<QString, int>> getLastRatedSongs(int count);   // Últimas canciones calificadas
+
 private:
+    void loadSongs();
+    void saveSongRating(const QString &songId, int rating);
+    int loadSongRating(const QString &songId);
+    void deleteSongRating(const QString &songId);
+
     QString username;
+
+    // 📌 Layouts y UI
     QVBoxLayout *mainLayout;
     QLineEdit *searchBar;
     QScrollArea *scroll;
     QWidget *container;
     QVBoxLayout *songsLayout;
 
-    // 🔑 Hash para canciones y widgets
-    QHash<QString, SongData> songHash;       // songId -> SongData
-    QHash<QString, QWidget*> rowHash;        // songId -> fila QWidget
-
-    void loadSongs();
-    void saveSongRating(const QString &songId, int rating);
-    int loadSongRating(const QString &songId);
-    void deleteSongRating(const QString &songId);
+    // 📌 Estructuras auxiliares
+    QHash<QString, SongData> songHash;  // SongId -> SongData
+    QHash<QString, QWidget*> rowHash;   // SongId -> Widget de la fila
 };
 
 #endif // SONGRATERUI_H

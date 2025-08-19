@@ -206,7 +206,8 @@ UserMenuUI::UserMenuUI(const QString &profilePicPath, const QString &username, Q
     }
 
     // PlayBar
-    playBar = new PlayBarUI;
+    playBar = new PlayBarUI(username, this);
+
     playBar->setVisible(false);
     mainPanelLayout->addWidget(playBar);
 

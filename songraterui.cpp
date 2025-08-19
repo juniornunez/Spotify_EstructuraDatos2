@@ -1,9 +1,12 @@
 #include "songraterui.h"
 #include <QHBoxLayout>
 #include <QPushButton>
-#include <QMessageBox>
 #include <QFile>
 #include <QDir>
+#include <QLabel>
+#include <QFont>
+#include <QDateTime>
+#include <QDebug>
 
 // Constructor
 SongRaterUI::SongRaterUI(const QString &username, QWidget *parent)
@@ -45,7 +48,7 @@ SongRaterUI::SongRaterUI(const QString &username, QWidget *parent)
 
     loadSongs();
 
-    // 👀 Conectar búsqueda (igual que en AdminMenuUI)
+    // 👀 Conectar búsqueda
     connect(searchBar, &QLineEdit::textChanged, this, [this](const QString &text) {
         QString query = text.trimmed().toLower();
 
@@ -144,7 +147,7 @@ void SongRaterUI::loadSongs()
     }
 }
 
-// 🔹 Guardar rating
+// 🔹 Guardar rating (ahora con timestamp)
 void SongRaterUI::saveSongRating(const QString &songId, int rating)
 {
     QString dirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1").arg(username);
@@ -155,6 +158,7 @@ void SongRaterUI::saveSongRating(const QString &songId, int rating)
         QDataStream out(&f);
         out.setVersion(QDataStream::Qt_5_15);
         out << rating;
+        out << QDateTime::currentDateTime().toSecsSinceEpoch(); // ⏰ guardamos timestamp
         f.close();
     }
 }
@@ -170,7 +174,10 @@ int SongRaterUI::loadSongRating(const QString &songId)
     if (f.open(QIODevice::ReadOnly)) {
         QDataStream in(&f);
         in.setVersion(QDataStream::Qt_5_15);
-        int rating; in >> rating; f.close();
+        int rating; qint64 timestamp;
+        in >> rating;
+        if (!in.atEnd()) in >> timestamp; // compatibilidad con archivos viejos
+        f.close();
         return rating;
     }
     return 0;
@@ -182,5 +189,69 @@ void SongRaterUI::deleteSongRating(const QString &songId)
     QString filePath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1/%2.dat")
     .arg(username, songId);
     QFile::remove(filePath);
+}
+
+// 🔹 Promedio de calificaciones dadas
+double SongRaterUI::getAverageRatingGiven() const
+{
+    QString dirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1").arg(username);
+    QDir dir(dirPath);
+    QStringList files = dir.entryList(QStringList() << "*.dat", QDir::Files);
+    if (files.isEmpty()) return 0.0;
+
+    int sum = 0, count = 0;
+    for (const QString &file : files) {
+        QFile f(dirPath + "/" + file);
+        if (f.open(QIODevice::ReadOnly)) {
+            QDataStream in(&f);
+            in.setVersion(QDataStream::Qt_5_15);
+            int rating; qint64 timestamp;
+            in >> rating;
+            if (!in.atEnd()) in >> timestamp;
+            sum += rating;
+            count++;
+            f.close();
+        }
+    }
+    return count > 0 ? static_cast<double>(sum) / count : 0.0;
+}
+
+// 🔹 Últimas canciones calificadas
+QList<QPair<QString, int>> SongRaterUI::getLastRatedSongs(int count)
+{
+    QList<QPair<QString, int>> result;
+    QString dirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/ratingsongs/%1").arg(username);
+    QDir dir(dirPath);
+    QStringList files = dir.entryList(QStringList() << "*.dat", QDir::Files);
+
+    struct RatedSong { QString id; int rating; qint64 time; };
+    QList<RatedSong> ratedSongs;
+
+    for (const QString &file : files) {
+        QFile f(dirPath + "/" + file);
+        if (f.open(QIODevice::ReadOnly)) {
+            QDataStream in(&f);
+            in.setVersion(QDataStream::Qt_5_15);
+            int rating; qint64 timestamp = 0;
+            in >> rating;
+            if (!in.atEnd()) in >> timestamp;
+            if (timestamp == 0) timestamp = QDateTime::currentSecsSinceEpoch(); // fallback
+            QString songId = QFileInfo(file).baseName();
+            ratedSongs.append({songId, rating, timestamp});
+            f.close();
+        }
+    }
+
+    // Ordenar por fecha descendente
+    std::sort(ratedSongs.begin(), ratedSongs.end(),
+              [](const RatedSong &a, const RatedSong &b) {
+                  return a.time > b.time;
+              });
+
+    for (int i = 0; i < qMin(count, ratedSongs.size()); i++) {
+        result.append({ratedSongs[i].id, ratedSongs[i].rating});
+    }
+
+    return result;
 }
 

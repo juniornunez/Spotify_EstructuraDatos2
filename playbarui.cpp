@@ -12,8 +12,8 @@
 #include <QFile>
 #include <QDataStream>
 
-PlayBarUI::PlayBarUI(QWidget *parent)
-    : QWidget(parent)
+PlayBarUI::PlayBarUI(const QString &username, QWidget *parent)
+    : QWidget(parent), currentUser(username)
 {
     setFixedHeight(88);
     setStyleSheet("background: #181818; border-top: 1px solid #111;");
@@ -96,7 +96,6 @@ PlayBarUI::PlayBarUI(QWidget *parent)
         );
     progressBar->setRange(0, 0);
     progressBar->setValue(0);
-    progressBar->setEnabled(true);
 
     connect(progressBar, &QSlider::sliderMoved, this, &PlayBarUI::onSliderMoved);
     connect(progressBar, &QSlider::sliderReleased, this, &PlayBarUI::onSliderReleased);
@@ -135,7 +134,7 @@ PlayBarUI::PlayBarUI(QWidget *parent)
     // 📌 Manejo del fin de canción
     connect(player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
         if (status == QMediaPlayer::EndOfMedia) {
-            alreadyCounted = false; // ✅ reset al terminar
+            alreadyCounted = false;
             if (repeatMode == RepeatOne) {
                 player->setPosition(0);
                 player->play();
@@ -166,7 +165,7 @@ void PlayBarUI::setSongInfo(const QString &coverPath,
     artistLabel->setText(artist);
 
     currentAudioPath = audioPath;
-    currentSongTitle = title;   // ✅ ahora usamos el título como identificador
+    currentSongTitle = title;
     currentArtist = artist;
     alreadyCounted = false;
 
@@ -199,7 +198,6 @@ void PlayBarUI::onPositionChanged(qint64 position)
         progressBar->setValue(static_cast<int>(position / 1000));
     }
 
-    // ✅ contar play si pasan 5 segundos
     if (position > 5000 && !alreadyCounted) {
         incrementPlayCount();
         alreadyCounted = true;
@@ -208,30 +206,37 @@ void PlayBarUI::onPositionChanged(qint64 position)
 
 void PlayBarUI::incrementPlayCount()
 {
-    QString dirPath = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/songsplays/%2")
-    .arg(currentArtist, currentSongTitle);
-    QDir().mkpath(dirPath);
+    QString userDir = QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1").arg(currentUser);
+    QDir().mkpath(userDir + "/songsplays");
 
-    QString filePath = dirPath + "/plays.dat";
-    QFile f(filePath);
+    // 🔹 Guardar plays individuales de la canción (por título)
+    QString songFile = userDir + "/songsplays/" + currentSongTitle + ".dat";
+    QFile f(songFile);
     int plays = 0;
-
-    if (f.open(QIODevice::ReadOnly)) {
-        QDataStream in(&f);
-        in >> plays;
-        f.close();
-    }
-
+    if (f.open(QIODevice::ReadOnly)) { QDataStream in(&f); in >> plays; f.close(); }
     plays++;
+    if (f.open(QIODevice::WriteOnly)) { QDataStream out(&f); out << plays; f.close(); }
 
-    if (f.open(QIODevice::WriteOnly)) {
-        QDataStream out(&f);
-        out << plays;
-        f.close();
-    }
+    // 🔹 Guardar total de canciones escuchadas
+    QString totalFile = userDir + "/totalsongs.dat";
+    int totalSongs = 0;
+    QFile f2(totalFile);
+    if (f2.open(QIODevice::ReadOnly)) { QDataStream in(&f2); in >> totalSongs; f2.close(); }
+    totalSongs++;
+    if (f2.open(QIODevice::WriteOnly)) { QDataStream out(&f2); out << totalSongs; f2.close(); }
 
-    qDebug() << "Play count actualizado:" << currentArtist << "-" << currentSongTitle << "->" << plays;
+    // 🔹 Guardar tiempo total escuchado
+    QString timeFile = userDir + "/totaltime.dat";
+    qint64 totalTime = 0;
+    QFile f3(timeFile);
+    if (f3.open(QIODevice::ReadOnly)) { QDataStream in(&f3); in >> totalTime; f3.close(); }
+    totalTime += player->duration() / 1000; // segundos
+    if (f3.open(QIODevice::WriteOnly)) { QDataStream out(&f3); out << totalTime; f3.close(); }
+
+    qDebug() << "Play actualizado:" << currentSongTitle << "->" << plays
+             << " | Tiempo total:" << totalTime;
 }
+
 
 void PlayBarUI::play()
 {
@@ -264,4 +269,38 @@ void PlayBarUI::onSliderMoved(int value)
 void PlayBarUI::onSliderReleased()
 {
     player->setPosition(progressBar->value() * 1000);
+}
+
+// ================== 📊 ESTADÍSTICAS ==================
+
+int PlayBarUI::getTotalSongsListened(const QString &username) {
+    QFile f(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/totalsongs.dat").arg(username));
+    if (!f.exists()) return 0;
+    if (f.open(QIODevice::ReadOnly)) { QDataStream in(&f); int val; in >> val; f.close(); return val; }
+    return 0;
+}
+
+qint64 PlayBarUI::getTotalListeningTime(const QString &username) {
+    QFile f(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/totaltime.dat").arg(username));
+    if (!f.exists()) return 0;
+    if (f.open(QIODevice::ReadOnly)) { QDataStream in(&f); qint64 val; in >> val; f.close(); return val; }
+    return 0;
+}
+
+QMap<QString,int> PlayBarUI::getPersonalSongPlayCounts(const QString &username) {
+    QMap<QString,int> result;
+    QDir dir(QString("C:/Users/moiza/Documents/QT/Spotify_Proyecto1/admindata/%1/songsplays").arg(username));
+    if (!dir.exists()) return result;
+
+    QStringList files = dir.entryList(QStringList() << "*.dat", QDir::Files);
+    for (const QString &file : files) {
+        QFile f(dir.absoluteFilePath(file));
+        if (f.open(QIODevice::ReadOnly)) {
+            QDataStream in(&f);
+            int plays; in >> plays; f.close();
+            QString songName = file.section(".",0,0);
+            result.insert(songName, plays);
+        }
+    }
+    return result;
 }
